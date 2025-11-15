@@ -32,7 +32,13 @@ final class NewTrackerViewController: UIViewController {
     }()
     
     private let nameTextField: UITextField = {
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done = UIBarButtonItem(title: "Готово", style: .done, target: self, action: #selector(hideKeyboard))
+        toolbar.items = [flex, done]
         let textField = UITextField()
+        textField.inputAccessoryView = toolbar
         textField.clearButtonMode = .whileEditing
         textField.placeholder = "Введите название трекера"
         textField.backgroundColor = UIColor(resource: .ypBackground)
@@ -108,6 +114,9 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         view.addSubview(titleLabel)
@@ -118,9 +127,21 @@ final class NewTrackerViewController: UIViewController {
         setupLayout()
         setupMenus()
         nameTextField.delegate = self
+        updateCreateButtonState()
     }
     
     // MARK: - Layout
+    
+    private func updateCreateButtonState() {
+        let hasName = !(nameTextField.text?.isEmpty ?? true)
+        let hasDays = !selectedDays.isEmpty
+        let enabled = hasName && hasDays
+        createButton.isEnabled = enabled
+
+        UIView.animate(withDuration: 0.2) {
+            self.createButton.backgroundColor = enabled ? .ypBlack : .ypGray
+        }
+    }
     
     private func setupLayout() {
         let buttonsStack = UIStackView(arrangedSubviews: [cancelButton, createButton])
@@ -178,6 +199,10 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Actions
     
+    @objc private func hideKeyboard() {
+        view.endEditing(true)
+    }
+    
     @objc private func scheduleTapped() {
         let vc = ScheduleSelectorViewController(days: allDays, selected: selectedDays)
         
@@ -185,6 +210,7 @@ final class NewTrackerViewController: UIViewController {
             guard let self else { return }
             
             self.selectedDays = newSelected
+            self.updateCreateButtonState()
             
             let dayShort: [String: String] = [
                 "Понедельник": "Пн",
@@ -249,7 +275,6 @@ final class NewTrackerViewController: UIViewController {
     @objc private func createTapped() {
         guard let name = nameTextField.text, !name.isEmpty else { return }
 
-        // Преобразуем выбранные дни в массив Weekday
         let weekdays: [Weekday] = selectedDays.compactMap { dayName in
             switch dayName {
             case "Понедельник": return .monday
@@ -271,7 +296,6 @@ final class NewTrackerViewController: UIViewController {
             schedule: weekdays
         )
 
-        // Передаем трекер обратно
         onCreateTracker?(newTracker)
 
         dismiss(animated: true)
@@ -379,6 +403,7 @@ extension NewTrackerViewController: UITextFieldDelegate {
             self.tableTopConstraint.constant = showWarning ? 24 : 0
             self.view.layoutIfNeeded()
         }
+        DispatchQueue.main.async { self.updateCreateButtonState() }
         return updatedText.count <= 38
     }
 }

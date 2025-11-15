@@ -5,7 +5,7 @@ final class TrackersViewController: UIViewController {
     // MARK: - UI
     private lazy var addButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(UIImage(named: "addButton"), for: .normal)
+        button.setImage(UIImage(resource: .addButton), for: .normal)
         button.tintColor = .label
         button.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -36,9 +36,15 @@ final class TrackersViewController: UIViewController {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
+    
     private let searchBar: UISearchBar = {
         let searchBar = UISearchBar()
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+        let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done = UIBarButtonItem(title: "Готово", style: .done, target: self, action: #selector(hideKeyboard))
+        toolbar.items = [flex, done]
+        searchBar.inputAccessoryView = toolbar
         searchBar.backgroundImage = UIImage()
         searchBar.searchTextField.backgroundColor = .systemGray6
         searchBar.searchTextField.layer.cornerRadius = 10
@@ -57,8 +63,8 @@ final class TrackersViewController: UIViewController {
     
     private let emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Нет трекеров на выбранную дату"
-        label.textColor = .secondaryLabel
+        label.text = "Что будем отслеживать?"
+        label.textColor = .black
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -98,7 +104,7 @@ final class TrackersViewController: UIViewController {
     private var trackers: [Tracker] = [
         Tracker(id: UUID(), name: "Пробежка", color: UIColor.ypRed, emoji: "😳", schedule: [Weekday.monday]),
         Tracker(id: UUID(), name: "Медитация", color: UIColor.ypBlue, emoji: "👀", schedule: [Weekday.tuesday]),
-        Tracker(id: UUID(), name: "Пить воду", color: UIColor.ypBlack, emoji: "😇", schedule: [Weekday.saturday])
+        Tracker(id: UUID(), name: "Пить воду", color: UIColor.ypBlack, emoji: "😇", schedule: [Weekday.sunday])
     ]
     
     struct MockData {
@@ -115,6 +121,9 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+        let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
         categories = [
             TrackerCategory(title: "Здоровье", trackers: trackers)
         ]
@@ -128,39 +137,39 @@ final class TrackersViewController: UIViewController {
     
     private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(true, animated: false)
-
+        
         view.addSubview(addButton)
         view.addSubview(titleLabel)
         view.addSubview(searchBar)
         view.addSubview(datePicker)
-
+        
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
         datePicker.maximumDate = Date()
         datePicker.addTarget(self, action: #selector(dateChanged(_:)), for: .valueChanged)
-
+        
         NSLayoutConstraint.activate([
-            // Add Button
             addButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             addButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
             addButton.widthAnchor.constraint(equalToConstant: 42),
             addButton.heightAnchor.constraint(equalToConstant: 42),
-
-            // Title Label
+            
             titleLabel.topAnchor.constraint(equalTo: addButton.bottomAnchor, constant: 1),
             titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             
-            // Date Picker
             datePicker.centerYAnchor.constraint(equalTo: addButton.centerYAnchor),
             datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-
-            // Search Bar
+            
             searchBar.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 7),
             searchBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchBar.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             searchBar.heightAnchor.constraint(equalToConstant: 36)
         ])
+    }
+    
+    @objc private func hideKeyboard() {
+        view.endEditing(true)
     }
     
     @objc private func dateChanged(_ sender: UIDatePicker) {
@@ -171,20 +180,15 @@ final class TrackersViewController: UIViewController {
     
     @objc private func addTapped() {
         let newTrackerVC = NewTrackerViewController()
-
+        
         newTrackerVC.onCreateTracker = { [weak self] tracker in
             guard let self else { return }
-
-            // Добавляем в массив trackers (моковые данные остаются в categories)
             self.trackers.append(tracker)
-
-            // Обновляем категорию "Здоровье", чтобы collectionView отобразил новый трекер
             self.categories = [TrackerCategory(title: "Здоровье", trackers: self.trackers)]
-
             self.collectionView.reloadData()
             self.updateEmptyState()
         }
-
+        
         let nav = UINavigationController(rootViewController: newTrackerVC)
         present(nav, animated: true)
     }
@@ -234,13 +238,13 @@ final class TrackersViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             emptyImageView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emptyImageView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -40),
+            emptyImageView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -246),
             emptyImageView.widthAnchor.constraint(equalToConstant: 80),
             emptyImageView.heightAnchor.constraint(equalToConstant: 80),
             
             emptyLabel.topAnchor.constraint(equalTo: emptyImageView.bottomAnchor, constant: 8),
-            emptyLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
-            emptyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32)
+            emptyLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            emptyLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
     }
     
@@ -264,7 +268,7 @@ extension TrackersViewController: UICollectionViewDataSource {
         let category = categories[section]
         let calendar = Calendar.current
         let weekdayInt = calendar.component(.weekday, from: selectedDate)
-
+        
         guard let weekday = Weekday(rawValue: weekdayInt) else { return 0 }
         
         let filtered = category.trackers.filter { tracker in
@@ -279,28 +283,23 @@ extension TrackersViewController: UICollectionViewDataSource {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as? TrackerCell else {
             return UICollectionViewCell()
         }
-
+        
         cell.delegate = self
-
+        
         let category = categories[indexPath.section]
         let calendar = Calendar.current
         let weekdayInt = calendar.component(.weekday, from: selectedDate)
+        
         guard let weekday = Weekday(rawValue: weekdayInt) else { return cell }
-
-        // Берём только трекеры для выбранного дня недели
         let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
         let tracker = filteredTrackers[indexPath.item]
-
         let today = calendar.startOfDay(for: selectedDate)
         let completedToday = completedRecords.contains {
             $0.trackerId == tracker.id && calendar.isDate($0.date, inSameDayAs: today)
         }
-
         let completedCount = completedRecords.filter { $0.trackerId == tracker.id }.count
-
-        // Конфигурируем ячейку
         cell.configure(with: tracker, completedToday: completedToday, completedCount: completedCount)
-
+        
         return cell
     }
     
@@ -325,16 +324,16 @@ extension TrackersViewController: TrackerCellDelegate {
     func didTapPlusButton(in cell: TrackerCell) {
         guard let indexPath = collectionView.indexPath(for: cell) else { return }
         let category = categories[indexPath.section]
-
+        
         let calendar = Calendar.current
         let weekdayInt = calendar.component(.weekday, from: selectedDate)
         guard let weekday = Weekday(rawValue: weekdayInt) else { return }
-
+        
         let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
         guard indexPath.item < filteredTrackers.count else { return }
-
+        
         let tracker = filteredTrackers[indexPath.item]
-
+        
         toggleTrackerCompletion(for: tracker, on: selectedDate)
     }
 }
