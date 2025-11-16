@@ -144,6 +144,7 @@ private final class DayCell: UITableViewCell {
         titleLabel.font = .systemFont(ofSize: 17, weight: .regular)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         toggleSwitch.translatesAutoresizingMaskIntoConstraints = false
+        toggleSwitch.onTintColor = .ypBlue
         contentView.addSubview(titleLabel)
         contentView.addSubview(toggleSwitch)
         
