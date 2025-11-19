@@ -2,20 +2,18 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    // MARK: - UI
-    private lazy var addButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(UIImage(resource: .addButton), for: .normal)
-        button.tintColor = .label
-        button.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
+    // MARK: - Data
+    private let trackerRecordStore = TrackerRecordStore()
+    private let trackerStore = TrackerStore()
+    private let trackerConverter = TrackerConverter()
+    
+    private var categories: [TrackerCategory] = []
+    private var completedRecords: [TrackerRecord] = []
+    
+    private var trackers: [Tracker] = []
     
     private var datePicker = UIDatePicker()
     private var collectionView: UICollectionView!
-    private var categories: [TrackerCategory] = []
-    private var completedRecords: [TrackerRecord] = []
     private var selectedDate = Date()
     
     private var trackersForSelectedDate: [Tracker] {
@@ -28,6 +26,16 @@ final class TrackersViewController: UIViewController {
             tracker.schedule.contains(weekday)
         }
     }
+    
+    // MARK: - UI
+    private lazy var addButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(resource: .addButton), for: .normal)
+        button.tintColor = .label
+        button.addTarget(self, action: #selector(addTapped), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -72,7 +80,43 @@ final class TrackersViewController: UIViewController {
     }()
     
     // MARK: - Методы для логики выполнения
-    func toggleTrackerCompletion(for tracker: Tracker, on date: Date) {
+    
+    private func loadTrackersFromStore() {
+        let coreTrackers = trackerStore.getAll()
+        print(">>> loadTrackersFromStore, count =", coreTrackers.count)
+        
+        let mappedTrackers: [Tracker] = coreTrackers.compactMap {
+            trackerConverter.makeTracker(from: $0)
+        }
+        self.trackers = mappedTrackers
+        
+        var grouped: [String: [Tracker]] = [:]
+        
+        for (index, core) in coreTrackers.enumerated() {
+            guard index < mappedTrackers.count else { continue }
+            let tracker = mappedTrackers[index]
+            
+            let categoryTitle = core.category?.title ?? "Без категории"
+            grouped[categoryTitle, default: []].append(tracker)
+        }
+        
+        self.categories = grouped
+            .map { TrackerCategory(title: $0.key, trackers: $0.value) }
+            .sorted { $0.title < $1.title }
+        
+        collectionView.reloadData()
+        updateEmptyState()
+    }
+    
+    private func loadRecords() {
+        let records = trackerRecordStore.getAll()
+        completedRecords = records.compactMap { coreDataRecord in
+            guard let id = coreDataRecord.trackerId, let date = coreDataRecord.date else { return nil }
+            return TrackerRecord(trackerId: id, date: date)
+        }
+    }
+    
+    private func toggleTrackerCompletion(for tracker: Tracker, on date: Date) {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         let normalizedDate = calendar.startOfDay(for: date)
@@ -86,8 +130,10 @@ final class TrackersViewController: UIViewController {
         
         if let index = completedRecords.firstIndex(where: { $0.trackerId == record.trackerId && $0.date == record.date }) {
             completedRecords.remove(at: index)
+            trackerRecordStore.remove(record)
         } else {
             completedRecords.append(record)
+            trackerRecordStore.add(record)
         }
         
         collectionView.reloadData()
@@ -99,22 +145,6 @@ final class TrackersViewController: UIViewController {
         present(alert, animated: true)
     }
     
-    // MARK: - Data
-    
-    private var trackers: [Tracker] = [
-        Tracker(id: UUID(), name: "Пробежка", color: UIColor.ypRed, emoji: "😳", schedule: [Weekday.monday]),
-        Tracker(id: UUID(), name: "Медитация", color: UIColor.ypBlue, emoji: "👀", schedule: [Weekday.tuesday]),
-        Tracker(id: UUID(), name: "Пить воду", color: UIColor.ypBlack, emoji: "😇", schedule: [Weekday.sunday])
-    ]
-    
-    struct MockData {
-        static let trackerRecord: [TrackerRecord] = {
-            let trackerId = UUID()
-            let calendar = Calendar.current
-            let mockDate = calendar.date(from: DateComponents(year: 2025, month: 11, day: 10))!
-            return [TrackerRecord(trackerId: trackerId, date: mockDate)]
-        }()
-    }
     
     // MARK: - Lifecycle
     
@@ -127,10 +157,17 @@ final class TrackersViewController: UIViewController {
         categories = [
             TrackerCategory(title: "Здоровье", trackers: trackers)
         ]
+        loadRecords()
         setupNavigationBar()
         setupCollectionView()
         setupEmptyState()
         updateEmptyState()
+        loadTrackersFromStore()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        loadTrackersFromStore()
     }
     
     // MARK: - Navigation Bar
@@ -168,6 +205,8 @@ final class TrackersViewController: UIViewController {
         ])
     }
     
+    // MARK: - Actions
+    
     @objc private func hideKeyboard() {
         view.endEditing(true)
     }
@@ -181,12 +220,8 @@ final class TrackersViewController: UIViewController {
     @objc private func addTapped() {
         let newTrackerVC = NewTrackerViewController()
         
-        newTrackerVC.onCreateTracker = { [weak self] tracker in
-            guard let self else { return }
-            self.trackers.append(tracker)
-            self.categories = [TrackerCategory(title: "Здоровье", trackers: self.trackers)]
-            self.collectionView.reloadData()
-            self.updateEmptyState()
+        newTrackerVC.onCreateTracker = { [weak self] _ in
+            self?.loadTrackersFromStore()
         }
         
         let nav = UINavigationController(rootViewController: newTrackerVC)
@@ -263,7 +298,6 @@ extension TrackersViewController: UICollectionViewDataSource {
         return categories.count
     }
     
-    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let category = categories[section]
         let calendar = Calendar.current
@@ -333,7 +367,6 @@ extension TrackersViewController: TrackerCellDelegate {
         guard indexPath.item < filteredTrackers.count else { return }
         
         let tracker = filteredTrackers[indexPath.item]
-        
         toggleTrackerCompletion(for: tracker, on: selectedDate)
     }
 }

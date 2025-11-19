@@ -1,68 +1,68 @@
-import Foundation
 import CoreData
+import UIKit
 
 final class TrackerStore: NSObject {
-
     private let context: NSManagedObjectContext
-    private let converter: TrackerConverter
+    private let saveContext: () -> Void
+    private var frc: NSFetchedResultsController<TrackerCoreData>
 
-    private lazy var fetchedResultsController: NSFetchedResultsController<TrackerCoreData> = {
-        let request = TrackerCoreData.fetchRequest()
+    override init() {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+
+        self.context = appDelegate.context
+        self.saveContext = appDelegate.saveContext
+
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
 
-        let controller = NSFetchedResultsController(
+        self.frc = NSFetchedResultsController(
             fetchRequest: request,
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil
         )
-        controller.delegate = self
-        return controller
-    }()
 
-    // MARK: - Init
-
-    init(context: NSManagedObjectContext, converter: TrackerConverter) {
-        self.context = context
-        self.converter = converter
         super.init()
-        try? fetchedResultsController.performFetch()
+
+        self.frc.delegate = self
+        try? frc.performFetch()
     }
 
-    // MARK: - Fetch
+    func getAll() -> [TrackerCoreData] {
+        try? frc.performFetch()
+        return frc.fetchedObjects ?? []
+    }
+    
+    func addTracker(name: String,
+                    emoji: String,
+                    colorHex: String,
+                    category: TrackerCategoryCoreData,
+                    schedule: [Int]) {
 
-    func getAll() -> [Tracker] {
-        (fetchedResultsController.fetchedObjects ?? [])
-            .compactMap { converter.makeTracker(from: $0) }
+        let tracker = TrackerCoreData(context: context)
+
+        tracker.id = UUID()
+        tracker.name = name
+        tracker.emoji = emoji
+        tracker.colorHex = colorHex
+        tracker.schedule = schedule as NSArray
+        tracker.category = category
+        category.addToTrackers(tracker)
+        print(">>> category =", category)
+        print(">>> SAVING tracker:", name, emoji, colorHex, schedule)
+        saveContext()
+        print(">>> Saved. Objects =", getAll().count)
     }
 
-    // MARK: - CRUD
-
-    func add(_ tracker: Tracker) {
-        let trackerCD = TrackerCoreData(context: context)
-        converter.fill(entity: trackerCD, from: tracker)
+    func delete(_ tracker: TrackerCoreData) {
+        context.delete(tracker)
         saveContext()
     }
 
-        private func saveContext() {
-            do {
-                try context.save()
-            } catch {
-                print("Failed to save tracker: \(error)")
-            }
-        }
-
-    func delete(id: UUID) throws {
-        let request = TrackerCoreData.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        if let obj = try context.fetch(request).first {
-            context.delete(obj)
-            try context.save()
-        }
+    func update(_ tracker: TrackerCoreData, newName: String) {
+        tracker.name = newName
+        saveContext()
     }
 }
 
-// MARK: - NSFetchedResultsControllerDelegate
 extension TrackerStore: NSFetchedResultsControllerDelegate {}
-
-

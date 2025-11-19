@@ -160,7 +160,10 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - Data
     
     var onCreateTracker: ((Tracker) -> Void)?
-
+    
+    private let trackerStore = TrackerStore()
+    private let categoryStore = TrackerCategoryStore()
+    
     private var selectedEmoji: String?
     private var selectedColor: UIColor?
     private var tableTopConstraint: NSLayoutConstraint!
@@ -203,7 +206,7 @@ final class NewTrackerViewController: UIViewController {
         view.addGestureRecognizer(tap)
         
         view.backgroundColor = .systemBackground
-
+        
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
@@ -233,7 +236,49 @@ final class NewTrackerViewController: UIViewController {
         navigationController?.setNavigationBarHidden(false, animated: false)
     }
     
-    // MARK: - Layout
+    // MARK: - Database Layer
+    
+    private func getMockCategory() -> TrackerCategoryCoreData {
+        let store = TrackerCategoryStore()
+        
+        if let existing = store.getAll().first(where: { $0.title == "Здоровье" }) {
+            return existing
+        }
+        
+        return store.addCategory(title: "Здоровье")
+    }
+    
+    func saveTrackerToDatabase() {
+        guard let name = nameTextField.text, !name.isEmpty else { return }
+        guard let emoji = selectedEmoji else { return }
+        guard let color = selectedColor else { return }
+        guard !selectedDays.isEmpty else { return }
+        
+        let category = getMockCategory()
+        
+        let scheduleInts: [Int] = selectedDays.compactMap {
+            switch $0 {
+            case "Понедельник": return 1
+            case "Вторник": return 2
+            case "Среда": return 3
+            case "Четверг": return 4
+            case "Пятница": return 5
+            case "Суббота": return 6
+            case "Воскресенье": return 7
+            default: return nil
+            }
+        }
+        
+        trackerStore.addTracker(
+            name: name,
+            emoji: emoji,
+            colorHex: color.toHex(),
+            category: category,
+            schedule: scheduleInts
+        )
+        
+        dismiss(animated: true)
+    }
     
     private func updateCreateButtonState() {
         let hasName = !(nameTextField.text?.isEmpty ?? true)
@@ -245,6 +290,8 @@ final class NewTrackerViewController: UIViewController {
             self.createButton.backgroundColor = enabled ? .ypBlack : .ypGray
         }
     }
+    
+    // MARK: - Layout
     
     private func setupLayout() {
         
@@ -268,8 +315,6 @@ final class NewTrackerViewController: UIViewController {
             contentView.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),
             contentView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
-            
-            // Чтобы ширина контента совпадала с шириной скролла (иначе горизонтальный скролл)
             contentView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
             
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
@@ -317,15 +362,11 @@ final class NewTrackerViewController: UIViewController {
         createButton.addTarget(self, action: #selector(createTapped), for: .touchUpInside)
     }
     
-    // MARK: - Table setup
-    
     private func setupTable() {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "catCell")
     }
-    
-    // MARK: - Setup Menus
     
     private func setupMenus() {
         scheduleButton.addTarget(self, action: #selector(scheduleTapped), for: .touchUpInside)
@@ -408,30 +449,40 @@ final class NewTrackerViewController: UIViewController {
     
     @objc private func createTapped() {
         guard let name = nameTextField.text, !name.isEmpty else { return }
-
-        let weekdays: [Weekday] = selectedDays.compactMap { dayName in
-            switch dayName {
-            case "Понедельник": return .monday
-            case "Вторник": return .tuesday
-            case "Среда": return .wednesday
-            case "Четверг": return .thursday
-            case "Пятница": return .friday
-            case "Суббота": return .saturday
-            case "Воскресенье": return .sunday
+        guard let emoji = selectedEmoji else { return }
+        guard let color = selectedColor else { return }
+        guard !selectedDays.isEmpty else { return }
+        
+        let category = getMockCategory()
+        
+        let scheduleInts: [Int] = selectedDays.compactMap { day in
+            switch day {
+            case "Понедельник": return 2
+            case "Вторник": return 3
+            case "Среда": return 4
+            case "Четверг": return 5
+            case "Пятница": return 6
+            case "Суббота": return 7
+            case "Воскресенье": return 1
             default: return nil
             }
         }
-
-        let newTracker = Tracker(
+        
+        trackerStore.addTracker(
+            name: name,
+            emoji: emoji,
+            colorHex: color.toHex(),
+            category: category,
+            schedule: scheduleInts
+        )
+        let model = Tracker(
             id: UUID(),
             name: name,
-            color: selectedColor ?? .ypRed,
-            emoji: selectedEmoji ?? "🙂",
-            schedule: weekdays
+            color: color,
+            emoji: emoji,
+            schedule: scheduleInts.compactMap { Weekday(rawValue: $0) }
         )
-
-        onCreateTracker?(newTracker)
-
+        onCreateTracker?(model)
         dismiss(animated: true)
     }
 }
@@ -439,7 +490,7 @@ final class NewTrackerViewController: UIViewController {
 // MARK: - Cell Classes
 
 final class EmojiCell: UICollectionViewCell {
-
+    
     private let label: UILabel = {
         let l = UILabel()
         l.font = .systemFont(ofSize: 32)
@@ -447,7 +498,7 @@ final class EmojiCell: UICollectionViewCell {
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
     }()
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.layer.cornerRadius = 16
@@ -457,9 +508,9 @@ final class EmojiCell: UICollectionViewCell {
             label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor)
         ])
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
-
+    
     func configure(_ emoji: String, selected: Bool) {
         label.text = emoji
         contentView.backgroundColor = selected ? UIColor.systemGray5 : .clear
@@ -467,19 +518,18 @@ final class EmojiCell: UICollectionViewCell {
 }
 
 final class ColorCell: UICollectionViewCell {
-
+    
     private let colorView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 8
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         contentView.addSubview(colorView)
         
-        // Центрируем цветной квадрат внутри ячейки
         NSLayoutConstraint.activate([
             colorView.widthAnchor.constraint(equalToConstant: 40),
             colorView.heightAnchor.constraint(equalToConstant: 40),
@@ -490,14 +540,13 @@ final class ColorCell: UICollectionViewCell {
         contentView.layer.cornerRadius = 8
         contentView.layer.masksToBounds = false
     }
-
+    
     required init?(coder: NSCoder) { fatalError() }
-
+    
     func configure(_ color: UIColor, selected: Bool) {
         colorView.backgroundColor = color
         
         if selected {
-            // Рамка вокруг colorView (в виде border у contentView)
             contentView.layer.borderWidth = 3
             contentView.layer.borderColor = color.withAlphaComponent(0.3).cgColor
         } else {
@@ -595,6 +644,43 @@ extension NewTrackerViewController: UITableViewDelegate, UITableViewDataSource {
     }
 }
 
+extension NewTrackerViewController: UICollectionViewDataSource, UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if collectionView == emojiCollection { return emojiArray.count }
+        return colorArray.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        if collectionView == emojiCollection {
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as! EmojiCell
+            let emoji = emojiArray[indexPath.item]
+            cell.configure(emoji, selected: emoji == selectedEmoji)
+            return cell
+        }
+        
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as! ColorCell
+        let color = colorArray[indexPath.item]
+        cell.configure(color, selected: color == selectedColor)
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        
+        if collectionView == emojiCollection {
+            selectedEmoji = emojiArray[indexPath.item]
+            emojiCollection.reloadData()
+        } else {
+            selectedColor = colorArray[indexPath.item]
+            colorCollection.reloadData()
+        }
+        
+        updateCreateButtonState()
+    }
+}
+
+// MARK: - Textfield Characters Warning
+
 extension NewTrackerViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = textField.text ?? ""
@@ -610,41 +696,5 @@ extension NewTrackerViewController: UITextFieldDelegate {
         }
         DispatchQueue.main.async { self.updateCreateButtonState() }
         return updatedText.count <= 38
-    }
-}
-
-extension NewTrackerViewController: UICollectionViewDataSource, UICollectionViewDelegate {
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        if collectionView == emojiCollection { return emojiArray.count }
-        return colorArray.count
-    }
-
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-
-        if collectionView == emojiCollection {
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "EmojiCell", for: indexPath) as! EmojiCell
-            let emoji = emojiArray[indexPath.item]
-            cell.configure(emoji, selected: emoji == selectedEmoji)
-            return cell
-        }
-
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ColorCell", for: indexPath) as! ColorCell
-        let color = colorArray[indexPath.item]
-        cell.configure(color, selected: color == selectedColor)
-        return cell
-    }
-
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-
-        if collectionView == emojiCollection {
-            selectedEmoji = emojiArray[indexPath.item]
-            emojiCollection.reloadData()
-        } else {
-            selectedColor = colorArray[indexPath.item]
-            colorCollection.reloadData()
-        }
-
-        updateCreateButtonState()
     }
 }

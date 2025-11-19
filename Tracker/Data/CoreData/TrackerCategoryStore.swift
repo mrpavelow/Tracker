@@ -1,36 +1,32 @@
-import Foundation
 import CoreData
+import UIKit
 
 final class TrackerCategoryStore {
-
+    
     private let context: NSManagedObjectContext
-    private let converter: TrackerConverter
-
-    init(context: NSManagedObjectContext, converter: TrackerConverter) {
-        self.context = context
-        self.converter = converter
+    private let saveContext: () -> Void
+    
+    init() {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        self.context = appDelegate.context
+        self.saveContext = appDelegate.saveContext
     }
-
-    // MARK: - Fetch
-
-    func getAll() throws -> [TrackerCategory] {
+    
+    func addCategory(title: String) -> TrackerCategoryCoreData {
+        let category = TrackerCategoryCoreData(context: context)
+        category.title = title
+        saveContext()
+        return category
+    }
+    
+    func getAll() -> [TrackerCategoryCoreData] {
         let request = TrackerCategoryCoreData.fetchRequest()
-        let objects = try context.fetch(request)
-
-        return try objects.compactMap { coreCat in
-            let trackers = (coreCat.trackers as? Set<TrackerCoreData> ?? [])
-                .compactMap { converter.makeTracker(from: $0) }
-
-            return TrackerCategory(title: coreCat.title ?? "", trackers: trackers)
-        }
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        return (try? context.fetch(request)) ?? []
     }
-
-    // MARK: - add
-
-    func addCategory(title: String) throws -> TrackerCategoryCoreData {
-        let entity = TrackerCategoryCoreData(context: context)
-        entity.title = title
-        try context.save()
-        return entity
+    
+    func delete(_ category: TrackerCategoryCoreData) {
+        context.delete(category)
+        saveContext()
     }
 }
