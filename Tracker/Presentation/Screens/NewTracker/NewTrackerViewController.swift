@@ -162,7 +162,6 @@ final class NewTrackerViewController: UIViewController {
     var onCreateTracker: ((Tracker) -> Void)?
     
     private let trackerStore = TrackerStore()
-    private let categoryStore = TrackerCategoryStore()
     
     private var selectedEmoji: String?
     private var selectedColor: UIColor?
@@ -238,14 +237,8 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Database Layer
     
-    private func getMockCategory() -> TrackerCategoryCoreData {
-        let store = TrackerCategoryStore()
-        
-        if let existing = store.getAll().first(where: { $0.title == "Здоровье" }) {
-            return existing
-        }
-        
-        return store.addCategory(title: "Здоровье")
+    private func getMockCategoryTitle() -> String {
+        return "Здоровье"
     }
     
     func saveTrackerToDatabase() {
@@ -254,7 +247,7 @@ final class NewTrackerViewController: UIViewController {
         guard let color = selectedColor else { return }
         guard !selectedDays.isEmpty else { return }
         
-        let category = getMockCategory()
+        let category = getMockCategoryTitle()
         
         let scheduleInts: [Int] = selectedDays.compactMap {
             switch $0 {
@@ -273,7 +266,7 @@ final class NewTrackerViewController: UIViewController {
             name: name,
             emoji: emoji,
             colorHex: color.toHex(),
-            category: category,
+            categoryTitle: category,
             schedule: scheduleInts
         )
         
@@ -452,37 +445,39 @@ final class NewTrackerViewController: UIViewController {
         guard let emoji = selectedEmoji else { return }
         guard let color = selectedColor else { return }
         guard !selectedDays.isEmpty else { return }
-        
-        let category = getMockCategory()
-        
+
+        let categoryTitle = getMockCategoryTitle()
+
         let scheduleInts: [Int] = selectedDays.compactMap { day in
             switch day {
             case "Понедельник": return 2
-            case "Вторник": return 3
-            case "Среда": return 4
-            case "Четверг": return 5
-            case "Пятница": return 6
-            case "Суббота": return 7
+            case "Вторник":     return 3
+            case "Среда":       return 4
+            case "Четверг":     return 5
+            case "Пятница":     return 6
+            case "Суббота":     return 7
             case "Воскресенье": return 1
-            default: return nil
+            default:            return nil
             }
         }
-        
+
         trackerStore.addTracker(
             name: name,
             emoji: emoji,
             colorHex: color.toHex(),
-            category: category,
+            categoryTitle: categoryTitle,
             schedule: scheduleInts
         )
-        let model = Tracker(
+
+        let tracker = Tracker(
             id: UUID(),
             name: name,
             color: color,
             emoji: emoji,
             schedule: scheduleInts.compactMap { Weekday(rawValue: $0) }
         )
-        onCreateTracker?(model)
+        onCreateTracker?(tracker)
+
         dismiss(animated: true)
     }
 }

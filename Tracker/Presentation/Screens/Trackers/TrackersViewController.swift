@@ -5,27 +5,11 @@ final class TrackersViewController: UIViewController {
     // MARK: - Data
     private let trackerRecordStore = TrackerRecordStore()
     private let trackerStore = TrackerStore()
-    private let trackerConverter = TrackerConverter()
-    
-    private var categories: [TrackerCategory] = []
     private var completedRecords: [TrackerRecord] = []
-    
-    private var trackers: [Tracker] = []
     
     private var datePicker = UIDatePicker()
     private var collectionView: UICollectionView!
     private var selectedDate = Date()
-    
-    private var trackersForSelectedDate: [Tracker] {
-        let calendar = Calendar.current
-        let weekdayInt = calendar.component(.weekday, from: selectedDate)
-        
-        guard let weekday = Weekday(rawValue: weekdayInt) else { return [] }
-        
-        return trackers.filter { tracker in
-            tracker.schedule.contains(weekday)
-        }
-    }
     
     // MARK: - UI
     private lazy var addButton: UIButton = {
@@ -81,33 +65,6 @@ final class TrackersViewController: UIViewController {
     
     // MARK: - Методы для логики выполнения
     
-    private func loadTrackersFromStore() {
-        let coreTrackers = trackerStore.getAll()
-        print(">>> loadTrackersFromStore, count =", coreTrackers.count)
-        
-        let mappedTrackers: [Tracker] = coreTrackers.compactMap {
-            trackerConverter.makeTracker(from: $0)
-        }
-        self.trackers = mappedTrackers
-        
-        var grouped: [String: [Tracker]] = [:]
-        
-        for (index, core) in coreTrackers.enumerated() {
-            guard index < mappedTrackers.count else { continue }
-            let tracker = mappedTrackers[index]
-            
-            let categoryTitle = core.category?.title ?? "Без категории"
-            grouped[categoryTitle, default: []].append(tracker)
-        }
-        
-        self.categories = grouped
-            .map { TrackerCategory(title: $0.key, trackers: $0.value) }
-            .sorted { $0.title < $1.title }
-        
-        collectionView.reloadData()
-        updateEmptyState()
-    }
-    
     private func loadRecords() {
         let records = trackerRecordStore.getAll()
         completedRecords = records.compactMap { coreDataRecord in
@@ -151,23 +108,24 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
+
         let tap = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
-        categories = [
-            TrackerCategory(title: "Здоровье", trackers: trackers)
-        ]
+
         loadRecords()
         setupNavigationBar()
         setupCollectionView()
         setupEmptyState()
+
+        trackerStore.delegate = self
+
+        let weekdayInt = Calendar.current.component(.weekday, from: selectedDate)
+        if let weekday = Weekday(rawValue: weekdayInt) {
+            trackerStore.setWeekdayFilter(weekday)
+        }
+
         updateEmptyState()
-        loadTrackersFromStore()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        loadTrackersFromStore()
     }
     
     // MARK: - Navigation Bar
@@ -213,16 +171,20 @@ final class TrackersViewController: UIViewController {
     
     @objc private func dateChanged(_ sender: UIDatePicker) {
         selectedDate = sender.date
-        collectionView.reloadData()
-        updateEmptyState()
+
+        let calendar = Calendar.current
+        let weekdayInt = calendar.component(.weekday, from: selectedDate)
+        if let weekday = Weekday(rawValue: weekdayInt) {
+            trackerStore.setWeekdayFilter(weekday)
+        } else {
+            trackerStore.setWeekdayFilter(nil)
+        }
     }
     
     @objc private func addTapped() {
         let newTrackerVC = NewTrackerViewController()
         
-        newTrackerVC.onCreateTracker = { [weak self] _ in
-            self?.loadTrackersFromStore()
-        }
+        newTrackerVC.onCreateTracker = { _ in }
         
         let nav = UINavigationController(rootViewController: newTrackerVC)
         present(nav, animated: true)
@@ -284,7 +246,17 @@ final class TrackersViewController: UIViewController {
     }
     
     private func updateEmptyState() {
-        let isEmpty = trackersForSelectedDate.isEmpty
+        var isEmpty = true
+        let sections = trackerStore.numberOfSections()
+        if sections > 0 {
+            for section in 0..<sections {
+                if trackerStore.numberOfItems(in: section) > 0 {
+                    isEmpty = false
+                    break
+                }
+            }
+        }
+
         emptyImageView.isHidden = !isEmpty
         emptyLabel.isHidden = !isEmpty
         collectionView.isHidden = isEmpty
@@ -294,60 +266,56 @@ final class TrackersViewController: UIViewController {
 // MARK: - UICollectionView DataSource & Delegate
 
 extension TrackersViewController: UICollectionViewDataSource {
+
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return categories.count
+        return trackerStore.numberOfSections()
     }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let category = categories[section]
-        let calendar = Calendar.current
-        let weekdayInt = calendar.component(.weekday, from: selectedDate)
-        
-        guard let weekday = Weekday(rawValue: weekdayInt) else { return 0 }
-        
-        let filtered = category.trackers.filter { tracker in
-            tracker.schedule.contains(weekday)
-        }
-        
-        return filtered.count
+
+    func collectionView(_ collectionView: UICollectionView,
+                        numberOfItemsInSection section: Int) -> Int {
+        return trackerStore.numberOfItems(in: section)
     }
-    
+
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "TrackerCell", for: indexPath) as? TrackerCell else {
+        guard let cell = collectionView.dequeueReusableCell(
+            withReuseIdentifier: "TrackerCell",
+            for: indexPath
+        ) as? TrackerCell else {
             return UICollectionViewCell()
         }
-        
+
         cell.delegate = self
-        
-        let category = categories[indexPath.section]
+
+        let tracker = trackerStore.tracker(at: indexPath)
+
         let calendar = Calendar.current
-        let weekdayInt = calendar.component(.weekday, from: selectedDate)
-        
-        guard let weekday = Weekday(rawValue: weekdayInt) else { return cell }
-        let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
-        let tracker = filteredTrackers[indexPath.item]
         let today = calendar.startOfDay(for: selectedDate)
         let completedToday = completedRecords.contains {
             $0.trackerId == tracker.id && calendar.isDate($0.date, inSameDayAs: today)
         }
         let completedCount = completedRecords.filter { $0.trackerId == tracker.id }.count
-        cell.configure(with: tracker, completedToday: completedToday, completedCount: completedCount)
-        
+
+        cell.configure(with: tracker,
+                       completedToday: completedToday,
+                       completedCount: completedCount)
+
         return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView,
                         viewForSupplementaryElementOfKind kind: String,
                         at indexPath: IndexPath) -> UICollectionReusableView {
         guard kind == UICollectionView.elementKindSectionHeader,
-              let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
-                                                                           withReuseIdentifier: "CategoryHeaderView",
-                                                                           for: indexPath) as? CategoryHeaderView else {
+              let header = collectionView.dequeueReusableSupplementaryView(
+                ofKind: kind,
+                withReuseIdentifier: "CategoryHeaderView",
+                for: indexPath
+              ) as? CategoryHeaderView else {
             return UICollectionReusableView()
         }
-        
-        header.titleLabel.text = categories[indexPath.section].title
+
+        header.titleLabel.text = trackerStore.titleForSection(indexPath.section)
         return header
     }
 }
@@ -357,18 +325,54 @@ extension TrackersViewController: UICollectionViewDelegate {}
 extension TrackersViewController: TrackerCellDelegate {
     func didTapPlusButton(in cell: TrackerCell) {
         guard let indexPath = collectionView.indexPath(for: cell) else { return }
-        let category = categories[indexPath.section]
-        
-        let calendar = Calendar.current
-        let weekdayInt = calendar.component(.weekday, from: selectedDate)
-        guard let weekday = Weekday(rawValue: weekdayInt) else { return }
-        
-        let filteredTrackers = category.trackers.filter { $0.schedule.contains(weekday) }
-        guard indexPath.item < filteredTrackers.count else { return }
-        
-        let tracker = filteredTrackers[indexPath.item]
+
+        let tracker = trackerStore.tracker(at: indexPath)
         toggleTrackerCompletion(for: tracker, on: selectedDate)
     }
 }
+
+extension TrackersViewController: TrackerStoreDelegate {
+    func trackerStoreWillChangeContent(_ store: TrackerStore) {
+    }
+    
+    func trackerStoreDidReloadData(_ store: TrackerStore) {
+        collectionView.reloadData()
+        updateEmptyState()
+    }
+
+    func trackerStoreDidChangeContent(_ store: TrackerStore,
+                                      insertedSections: IndexSet,
+                                      deletedSections: IndexSet,
+                                      insertedItems: [IndexPath],
+                                      deletedItems: [IndexPath],
+                                      updatedItems: [IndexPath],
+                                      movedItems: [(from: IndexPath, to: IndexPath)]) {
+
+        collectionView.performBatchUpdates {
+            if !deletedSections.isEmpty {
+                collectionView.deleteSections(deletedSections)
+            }
+            if !insertedSections.isEmpty {
+                collectionView.insertSections(insertedSections)
+            }
+
+            if !deletedItems.isEmpty {
+                collectionView.deleteItems(at: deletedItems)
+            }
+            if !insertedItems.isEmpty {
+                collectionView.insertItems(at: insertedItems)
+            }
+            if !updatedItems.isEmpty {
+                collectionView.reloadItems(at: updatedItems)
+            }
+            for move in movedItems {
+                collectionView.moveItem(at: move.from, to: move.to)
+            }
+        }
+    }
+}
+
+
+
 
 
