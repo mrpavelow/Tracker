@@ -38,7 +38,7 @@ final class CategoryListViewController: UIViewController {
     
     private let emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно объединить по смыслу"
+        label.text = "Привычки и события можно \nобъединить по смыслу"
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textAlignment = .center
         label.textColor = .label

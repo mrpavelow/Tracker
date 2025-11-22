@@ -8,6 +8,17 @@ final class MainTabBarController: UITabBarController {
         configureAppearance()
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        let seen = UserDefaults.standard.bool(forKey: onboardingSeenKey)
+        guard !seen else { return }
+
+        let onboarding = OnboardingViewController()
+        onboarding.modalPresentationStyle = .fullScreen
+        present(onboarding, animated: true)
+    }
+    
     private func setupTabs() {
         let trackersVC = TrackersViewController()
         let trackersNav = UINavigationController(rootViewController: trackersVC)
