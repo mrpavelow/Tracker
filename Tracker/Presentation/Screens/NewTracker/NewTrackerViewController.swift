@@ -168,7 +168,6 @@ final class NewTrackerViewController: UIViewController {
     private var tableTopConstraint: NSLayoutConstraint!
     private var selectedCategory: String?
     private var selectedDays: [String] = []
-    private let allCategories = ["Здоровье", "Учёба", "Работа", "Отдых"]
     private let allDays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
     private let dayShort: [String: String] = [
         "Понедельник": "Пн",
@@ -237,28 +236,23 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Database Layer
     
-    private func getMockCategoryTitle() -> String {
-        return "Здоровье"
-    }
-    
     func saveTrackerToDatabase() {
         guard let name = nameTextField.text, !name.isEmpty else { return }
         guard let emoji = selectedEmoji else { return }
         guard let color = selectedColor else { return }
         guard !selectedDays.isEmpty else { return }
-        
-        let category = getMockCategoryTitle()
+        guard let categoryTitle = selectedCategory else { return }
         
         let scheduleInts: [Int] = selectedDays.compactMap {
             switch $0 {
             case "Понедельник": return 1
-            case "Вторник": return 2
-            case "Среда": return 3
-            case "Четверг": return 4
-            case "Пятница": return 5
-            case "Суббота": return 6
+            case "Вторник":     return 2
+            case "Среда":       return 3
+            case "Четверг":     return 4
+            case "Пятница":     return 5
+            case "Суббота":     return 6
             case "Воскресенье": return 7
-            default: return nil
+            default:            return nil
             }
         }
         
@@ -266,7 +260,7 @@ final class NewTrackerViewController: UIViewController {
             name: name,
             emoji: emoji,
             colorHex: color.toHex(),
-            categoryTitle: category,
+            categoryTitle: categoryTitle,
             schedule: scheduleInts
         )
         
@@ -274,9 +268,11 @@ final class NewTrackerViewController: UIViewController {
     }
     
     private func updateCreateButtonState() {
-        let hasName = !(nameTextField.text?.isEmpty ?? true)
-        let hasDays = !selectedDays.isEmpty
-        let enabled = hasName && hasDays
+        let hasName      = !(nameTextField.text?.isEmpty ?? true)
+        let hasDays      = !selectedDays.isEmpty
+        let hasCategory  = (selectedCategory != nil)
+        
+        let enabled = hasName && hasDays && hasCategory
         createButton.isEnabled = enabled
         
         UIView.animate(withDuration: 0.2) {
@@ -363,9 +359,66 @@ final class NewTrackerViewController: UIViewController {
     
     private func setupMenus() {
         scheduleButton.addTarget(self, action: #selector(scheduleTapped), for: .touchUpInside)
+        categoryButton.addTarget(self, action: #selector(categoryTapped), for: .touchUpInside)
+        
     }
     
     // MARK: - Actions
+    
+    @objc private func categoryTapped() {
+        let viewModel = CategoryListViewModel(
+            selectedCategoryTitle: selectedCategory
+        )
+        let vc = CategoryListViewController(viewModel: viewModel)
+        
+        vc.onCategorySelected = { [weak self] category in
+            guard let self else { return }
+            
+            self.selectedCategory = category.title
+            self.updateCreateButtonState()
+            
+            guard !category.title.isEmpty else {
+                self.categoryButton.setTitle("Категория", for: .normal)
+                self.categoryButton.setAttributedTitle(nil, for: .normal)
+                return
+            }
+            
+            let titleFont = UIFont.systemFont(ofSize: 17, weight: .regular)
+            let categoryFont = UIFont.systemFont(ofSize: 17, weight: .regular)
+            
+            let titleColor = UIColor.label
+            let categoryColor = UIColor.ypGray
+            
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.lineSpacing = 2
+            paragraph.alignment = .left
+            
+            let result = NSMutableAttributedString(
+                string: "Категория\n",
+                attributes: [
+                    .font: titleFont,
+                    .foregroundColor: titleColor,
+                    .paragraphStyle: paragraph
+                ]
+            )
+            
+            let value = NSAttributedString(
+                string: category.title,
+                attributes: [
+                    .font: categoryFont,
+                    .foregroundColor: categoryColor,
+                    .paragraphStyle: paragraph
+                ]
+            )
+            result.append(value)
+            
+            self.categoryButton.setAttributedTitle(result, for: .normal)
+            self.categoryButton.titleLabel?.numberOfLines = 0
+        }
+        
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
+    }
     
     @objc private func hideKeyboard() {
         view.endEditing(true)
@@ -410,7 +463,7 @@ final class NewTrackerViewController: UIViewController {
             paragraph.alignment = .left
             
             let result = NSMutableAttributedString(
-                string: "Расписание:\n",
+                string: "Расписание\n",
                 attributes: [
                     .font: titleFont,
                     .foregroundColor: titleColor,
@@ -445,9 +498,8 @@ final class NewTrackerViewController: UIViewController {
         guard let emoji = selectedEmoji else { return }
         guard let color = selectedColor else { return }
         guard !selectedDays.isEmpty else { return }
-
-        let categoryTitle = getMockCategoryTitle()
-
+        guard let categoryTitle = selectedCategory else { return }
+        
         let scheduleInts: [Int] = selectedDays.compactMap { day in
             switch day {
             case "Понедельник": return 2
@@ -460,7 +512,7 @@ final class NewTrackerViewController: UIViewController {
             default:            return nil
             }
         }
-
+        
         trackerStore.addTracker(
             name: name,
             emoji: emoji,
@@ -468,7 +520,7 @@ final class NewTrackerViewController: UIViewController {
             categoryTitle: categoryTitle,
             schedule: scheduleInts
         )
-
+        
         let tracker = Tracker(
             id: UUID(),
             name: name,
@@ -477,7 +529,7 @@ final class NewTrackerViewController: UIViewController {
             schedule: scheduleInts.compactMap { Weekday(rawValue: $0) }
         )
         onCreateTracker?(tracker)
-
+        
         dismiss(animated: true)
     }
 }
