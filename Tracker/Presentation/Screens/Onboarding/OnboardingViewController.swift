@@ -1,7 +1,5 @@
 import UIKit
 
-let onboardingSeenKey = "hasSeenOnboarding"
-
 final class OnboardingViewController: UIPageViewController {
     
     // MARK: - Страницы
