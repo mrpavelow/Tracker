@@ -20,7 +20,6 @@ final class TrackerCategoryStore {
         
         do {
             let result = try context.fetch(request)
-            print(">>> CategoryStore.getAll count =", result.count)
             return result
         } catch {
             print("Failed to fetch categories:", error)

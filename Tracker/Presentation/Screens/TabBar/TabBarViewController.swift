@@ -11,7 +11,7 @@ final class MainTabBarController: UITabBarController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
-        let seen = UserDefaults.standard.bool(forKey: onboardingSeenKey)
+        let seen = UserDefaultsService.shared.hasSeenOnboarding
         guard !seen else { return }
 
         let onboarding = OnboardingViewController()

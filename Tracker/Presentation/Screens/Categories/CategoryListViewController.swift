@@ -29,7 +29,7 @@ final class CategoryListViewController: UIViewController {
     }()
     
     private let emptyImageView: UIImageView = {
-        let iv = UIImageView(image: UIImage(named: "bgplaceholder"))
+        let iv = UIImageView(image: UIImage(resource: .bgplaceholder))
         iv.translatesAutoresizingMaskIntoConstraints = false
         iv.contentMode = .scaleAspectFit
         iv.isHidden = true
@@ -66,7 +66,10 @@ final class CategoryListViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     // MARK: - Lifecycle
     

@@ -29,7 +29,7 @@ final class TrackersViewController: UIViewController {
         return label
     }()
     
-    private let searchBar: UISearchBar = {
+    private lazy var searchBar: UISearchBar = {
         let searchBar = UISearchBar()
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
@@ -47,7 +47,7 @@ final class TrackersViewController: UIViewController {
     }()
     
     private let emptyImageView: UIImageView = {
-        let imageView = UIImageView(image: UIImage(named: "bgplaceholder"))
+        let imageView = UIImageView(image: UIImage(resource: .bgplaceholder))
         imageView.contentMode = .scaleAspectFit
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView

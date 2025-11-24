@@ -16,7 +16,7 @@ final class NewCategoryViewController: UIViewController {
         return label
     }()
     
-    private let nameTextField: UITextField = {
+    private lazy var newCategoryTextField: UITextField = {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -61,25 +61,25 @@ final class NewCategoryViewController: UIViewController {
         setupLayout()
         setupActions()
         
-        nameTextField.delegate = self
-        nameTextField.becomeFirstResponder()
+        newCategoryTextField.delegate = self
+        newCategoryTextField.becomeFirstResponder()
     }
     
     // MARK: - Layout
     
     private func setupLayout() {
         view.addSubview(titleLabel)
-        view.addSubview(nameTextField)
+        view.addSubview(newCategoryTextField)
         view.addSubview(doneButton)
         
         NSLayoutConstraint.activate([
             titleLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 24),
             titleLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            nameTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            nameTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            nameTextField.heightAnchor.constraint(equalToConstant: 75),
+            newCategoryTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
+            newCategoryTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            newCategoryTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            newCategoryTextField.heightAnchor.constraint(equalToConstant: 75),
             
             doneButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             doneButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -92,7 +92,7 @@ final class NewCategoryViewController: UIViewController {
     
     private func setupActions() {
         doneButton.addTarget(self, action: #selector(doneTapped), for: .touchUpInside)
-        nameTextField.addTarget(self, action: #selector(textChanged), for: .editingChanged)
+        newCategoryTextField.addTarget(self, action: #selector(textChanged), for: .editingChanged)
     }
     
     @objc private func hideKeyboard() {
@@ -104,7 +104,7 @@ final class NewCategoryViewController: UIViewController {
     }
     
     @objc private func doneTapped() {
-        let text = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let text = newCategoryTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         guard !text.isEmpty else { return }
         
         onCreateCategory?(text)
@@ -112,7 +112,7 @@ final class NewCategoryViewController: UIViewController {
     }
     
     @objc private func textChanged() {
-        let text = nameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let text = newCategoryTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let enabled = !text.isEmpty
         
         doneButton.isEnabled = enabled

@@ -56,8 +56,9 @@ final class OnboardingViewController: UIPageViewController {
                    options: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
+        nil
     }
     
     // MARK: - Lifecycle
@@ -101,9 +102,7 @@ final class OnboardingViewController: UIPageViewController {
     // MARK: - Actions
     
     @objc private func actionButtonTapped() {
-        UserDefaults.standard.set(true, forKey: onboardingSeenKey)
-        UserDefaults.standard.synchronize()
-        
+        UserDefaultsService.shared.hasSeenOnboarding = true
         dismiss(animated: true)
     }
 }

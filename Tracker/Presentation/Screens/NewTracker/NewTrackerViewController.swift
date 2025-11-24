@@ -43,7 +43,7 @@ final class NewTrackerViewController: UIViewController {
         return tableView
     }()
     
-    private let nameTextField: UITextField = {
+    private lazy var newTrackerTextField: UITextField = {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -209,7 +209,7 @@ final class NewTrackerViewController: UIViewController {
         scrollView.addSubview(contentView)
         
         contentView.addSubview(titleLabel)
-        contentView.addSubview(nameTextField)
+        contentView.addSubview(newTrackerTextField)
         contentView.addSubview(warningLabel)
         contentView.addSubview(tableView)
         contentView.addSubview(emojiLabel)
@@ -220,7 +220,7 @@ final class NewTrackerViewController: UIViewController {
         setupTable()
         setupLayout()
         setupMenus()
-        nameTextField.delegate = self
+        newTrackerTextField.delegate = self
         updateCreateButtonState()
     }
     
@@ -237,11 +237,16 @@ final class NewTrackerViewController: UIViewController {
     // MARK: - Database Layer
     
     func saveTrackerToDatabase() {
-        guard let name = nameTextField.text, !name.isEmpty else { return }
-        guard let emoji = selectedEmoji else { return }
-        guard let color = selectedColor else { return }
-        guard !selectedDays.isEmpty else { return }
-        guard let categoryTitle = selectedCategory else { return }
+        
+        guard
+            let name = newTrackerTextField.text, !name.isEmpty,
+            let emoji = selectedEmoji,
+            let color = selectedColor,
+            !selectedDays.isEmpty,
+            let categoryTitle = selectedCategory
+        else {
+            return
+        }
         
         let scheduleInts: [Int] = selectedDays.compactMap {
             switch $0 {
@@ -268,7 +273,7 @@ final class NewTrackerViewController: UIViewController {
     }
     
     private func updateCreateButtonState() {
-        let hasName      = !(nameTextField.text?.isEmpty ?? true)
+        let hasName      = !(newTrackerTextField.text?.isEmpty ?? true)
         let hasDays      = !selectedDays.isEmpty
         let hasCategory  = (selectedCategory != nil)
         
@@ -309,13 +314,13 @@ final class NewTrackerViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            nameTextField.heightAnchor.constraint(equalToConstant: 75),
+            newTrackerTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
+            newTrackerTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            newTrackerTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            newTrackerTextField.heightAnchor.constraint(equalToConstant: 75),
             
-            warningLabel.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 8),
-            warningLabel.centerXAnchor.constraint(equalTo: nameTextField.centerXAnchor),
+            warningLabel.topAnchor.constraint(equalTo: newTrackerTextField.bottomAnchor, constant: 8),
+            warningLabel.centerXAnchor.constraint(equalTo: newTrackerTextField.centerXAnchor),
             
             tableTopConstraint,
             tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -494,11 +499,15 @@ final class NewTrackerViewController: UIViewController {
     }
     
     @objc private func createTapped() {
-        guard let name = nameTextField.text, !name.isEmpty else { return }
-        guard let emoji = selectedEmoji else { return }
-        guard let color = selectedColor else { return }
-        guard !selectedDays.isEmpty else { return }
-        guard let categoryTitle = selectedCategory else { return }
+        guard
+            let name = newTrackerTextField.text, !name.isEmpty,
+            let emoji = selectedEmoji,
+            let color = selectedColor,
+            !selectedDays.isEmpty,
+            let categoryTitle = selectedCategory
+        else {
+            return
+        }
         
         let scheduleInts: [Int] = selectedDays.compactMap { day in
             switch day {
@@ -556,7 +565,10 @@ final class EmojiCell: UICollectionViewCell {
         ])
     }
     
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     func configure(_ emoji: String, selected: Bool) {
         label.text = emoji
@@ -588,7 +600,10 @@ final class ColorCell: UICollectionViewCell {
         contentView.layer.masksToBounds = false
     }
     
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     func configure(_ color: UIColor, selected: Bool) {
         colorView.backgroundColor = color
@@ -620,7 +635,7 @@ extension NewTrackerViewController: UITableViewDelegate, UITableViewDataSource {
         cell.backgroundColor = .clear
         cell.contentView.backgroundColor = UIColor.ypBackground
         cell.contentView.subviews.forEach { $0.removeFromSuperview() }
-        let chevronView = UIImageView(image: UIImage(named: "chevron"))
+        let chevronView = UIImageView(image: UIImage(resource: .chevron))
         chevronView.translatesAutoresizingMaskIntoConstraints = false
         
         if indexPath.section == 0 {
