@@ -17,7 +17,10 @@ final class ScheduleSelectorViewController: UIViewController {
         modalPresentationStyle = .formSheet
     }
     
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -138,7 +141,10 @@ private final class DayCell: UITableViewCell {
         setup()
     }
     
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     private func setup() {
         titleLabel.font = .systemFont(ofSize: 17, weight: .regular)

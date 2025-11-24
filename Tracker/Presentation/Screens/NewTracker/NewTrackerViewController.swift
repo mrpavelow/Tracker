@@ -43,7 +43,7 @@ final class NewTrackerViewController: UIViewController {
         return tableView
     }()
     
-    private let nameTextField: UITextField = {
+    private lazy var newTrackerTextField: UITextField = {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
@@ -168,7 +168,6 @@ final class NewTrackerViewController: UIViewController {
     private var tableTopConstraint: NSLayoutConstraint!
     private var selectedCategory: String?
     private var selectedDays: [String] = []
-    private let allCategories = ["Здоровье", "Учёба", "Работа", "Отдых"]
     private let allDays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
     private let dayShort: [String: String] = [
         "Понедельник": "Пн",
@@ -210,7 +209,7 @@ final class NewTrackerViewController: UIViewController {
         scrollView.addSubview(contentView)
         
         contentView.addSubview(titleLabel)
-        contentView.addSubview(nameTextField)
+        contentView.addSubview(newTrackerTextField)
         contentView.addSubview(warningLabel)
         contentView.addSubview(tableView)
         contentView.addSubview(emojiLabel)
@@ -221,7 +220,7 @@ final class NewTrackerViewController: UIViewController {
         setupTable()
         setupLayout()
         setupMenus()
-        nameTextField.delegate = self
+        newTrackerTextField.delegate = self
         updateCreateButtonState()
     }
     
@@ -237,28 +236,28 @@ final class NewTrackerViewController: UIViewController {
     
     // MARK: - Database Layer
     
-    private func getMockCategoryTitle() -> String {
-        return "Здоровье"
-    }
-    
     func saveTrackerToDatabase() {
-        guard let name = nameTextField.text, !name.isEmpty else { return }
-        guard let emoji = selectedEmoji else { return }
-        guard let color = selectedColor else { return }
-        guard !selectedDays.isEmpty else { return }
         
-        let category = getMockCategoryTitle()
+        guard
+            let name = newTrackerTextField.text, !name.isEmpty,
+            let emoji = selectedEmoji,
+            let color = selectedColor,
+            !selectedDays.isEmpty,
+            let categoryTitle = selectedCategory
+        else {
+            return
+        }
         
         let scheduleInts: [Int] = selectedDays.compactMap {
             switch $0 {
             case "Понедельник": return 1
-            case "Вторник": return 2
-            case "Среда": return 3
-            case "Четверг": return 4
-            case "Пятница": return 5
-            case "Суббота": return 6
+            case "Вторник":     return 2
+            case "Среда":       return 3
+            case "Четверг":     return 4
+            case "Пятница":     return 5
+            case "Суббота":     return 6
             case "Воскресенье": return 7
-            default: return nil
+            default:            return nil
             }
         }
         
@@ -266,7 +265,7 @@ final class NewTrackerViewController: UIViewController {
             name: name,
             emoji: emoji,
             colorHex: color.toHex(),
-            categoryTitle: category,
+            categoryTitle: categoryTitle,
             schedule: scheduleInts
         )
         
@@ -274,9 +273,11 @@ final class NewTrackerViewController: UIViewController {
     }
     
     private func updateCreateButtonState() {
-        let hasName = !(nameTextField.text?.isEmpty ?? true)
-        let hasDays = !selectedDays.isEmpty
-        let enabled = hasName && hasDays
+        let hasName      = !(newTrackerTextField.text?.isEmpty ?? true)
+        let hasDays      = !selectedDays.isEmpty
+        let hasCategory  = (selectedCategory != nil)
+        
+        let enabled = hasName && hasDays && hasCategory
         createButton.isEnabled = enabled
         
         UIView.animate(withDuration: 0.2) {
@@ -313,13 +314,13 @@ final class NewTrackerViewController: UIViewController {
             titleLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 24),
             titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
             
-            nameTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
-            nameTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            nameTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            nameTextField.heightAnchor.constraint(equalToConstant: 75),
+            newTrackerTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 38),
+            newTrackerTextField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            newTrackerTextField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            newTrackerTextField.heightAnchor.constraint(equalToConstant: 75),
             
-            warningLabel.topAnchor.constraint(equalTo: nameTextField.bottomAnchor, constant: 8),
-            warningLabel.centerXAnchor.constraint(equalTo: nameTextField.centerXAnchor),
+            warningLabel.topAnchor.constraint(equalTo: newTrackerTextField.bottomAnchor, constant: 8),
+            warningLabel.centerXAnchor.constraint(equalTo: newTrackerTextField.centerXAnchor),
             
             tableTopConstraint,
             tableView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
@@ -363,9 +364,66 @@ final class NewTrackerViewController: UIViewController {
     
     private func setupMenus() {
         scheduleButton.addTarget(self, action: #selector(scheduleTapped), for: .touchUpInside)
+        categoryButton.addTarget(self, action: #selector(categoryTapped), for: .touchUpInside)
+        
     }
     
     // MARK: - Actions
+    
+    @objc private func categoryTapped() {
+        let viewModel = CategoryListViewModel(
+            selectedCategoryTitle: selectedCategory
+        )
+        let vc = CategoryListViewController(viewModel: viewModel)
+        
+        vc.onCategorySelected = { [weak self] category in
+            guard let self else { return }
+            
+            self.selectedCategory = category.title
+            self.updateCreateButtonState()
+            
+            guard !category.title.isEmpty else {
+                self.categoryButton.setTitle("Категория", for: .normal)
+                self.categoryButton.setAttributedTitle(nil, for: .normal)
+                return
+            }
+            
+            let titleFont = UIFont.systemFont(ofSize: 17, weight: .regular)
+            let categoryFont = UIFont.systemFont(ofSize: 17, weight: .regular)
+            
+            let titleColor = UIColor.label
+            let categoryColor = UIColor.ypGray
+            
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.lineSpacing = 2
+            paragraph.alignment = .left
+            
+            let result = NSMutableAttributedString(
+                string: "Категория\n",
+                attributes: [
+                    .font: titleFont,
+                    .foregroundColor: titleColor,
+                    .paragraphStyle: paragraph
+                ]
+            )
+            
+            let value = NSAttributedString(
+                string: category.title,
+                attributes: [
+                    .font: categoryFont,
+                    .foregroundColor: categoryColor,
+                    .paragraphStyle: paragraph
+                ]
+            )
+            result.append(value)
+            
+            self.categoryButton.setAttributedTitle(result, for: .normal)
+            self.categoryButton.titleLabel?.numberOfLines = 0
+        }
+        
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
+    }
     
     @objc private func hideKeyboard() {
         view.endEditing(true)
@@ -410,7 +468,7 @@ final class NewTrackerViewController: UIViewController {
             paragraph.alignment = .left
             
             let result = NSMutableAttributedString(
-                string: "Расписание:\n",
+                string: "Расписание\n",
                 attributes: [
                     .font: titleFont,
                     .foregroundColor: titleColor,
@@ -441,13 +499,16 @@ final class NewTrackerViewController: UIViewController {
     }
     
     @objc private func createTapped() {
-        guard let name = nameTextField.text, !name.isEmpty else { return }
-        guard let emoji = selectedEmoji else { return }
-        guard let color = selectedColor else { return }
-        guard !selectedDays.isEmpty else { return }
-
-        let categoryTitle = getMockCategoryTitle()
-
+        guard
+            let name = newTrackerTextField.text, !name.isEmpty,
+            let emoji = selectedEmoji,
+            let color = selectedColor,
+            !selectedDays.isEmpty,
+            let categoryTitle = selectedCategory
+        else {
+            return
+        }
+        
         let scheduleInts: [Int] = selectedDays.compactMap { day in
             switch day {
             case "Понедельник": return 2
@@ -460,7 +521,7 @@ final class NewTrackerViewController: UIViewController {
             default:            return nil
             }
         }
-
+        
         trackerStore.addTracker(
             name: name,
             emoji: emoji,
@@ -468,7 +529,7 @@ final class NewTrackerViewController: UIViewController {
             categoryTitle: categoryTitle,
             schedule: scheduleInts
         )
-
+        
         let tracker = Tracker(
             id: UUID(),
             name: name,
@@ -477,7 +538,7 @@ final class NewTrackerViewController: UIViewController {
             schedule: scheduleInts.compactMap { Weekday(rawValue: $0) }
         )
         onCreateTracker?(tracker)
-
+        
         dismiss(animated: true)
     }
 }
@@ -504,7 +565,10 @@ final class EmojiCell: UICollectionViewCell {
         ])
     }
     
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     func configure(_ emoji: String, selected: Bool) {
         label.text = emoji
@@ -536,7 +600,10 @@ final class ColorCell: UICollectionViewCell {
         contentView.layer.masksToBounds = false
     }
     
-    required init?(coder: NSCoder) { fatalError() }
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
     
     func configure(_ color: UIColor, selected: Bool) {
         colorView.backgroundColor = color
@@ -568,7 +635,7 @@ extension NewTrackerViewController: UITableViewDelegate, UITableViewDataSource {
         cell.backgroundColor = .clear
         cell.contentView.backgroundColor = UIColor.ypBackground
         cell.contentView.subviews.forEach { $0.removeFromSuperview() }
-        let chevronView = UIImageView(image: UIImage(named: "chevron"))
+        let chevronView = UIImageView(image: UIImage(resource: .chevron))
         chevronView.translatesAutoresizingMaskIntoConstraints = false
         
         if indexPath.section == 0 {
