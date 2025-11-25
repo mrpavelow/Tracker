@@ -51,7 +51,7 @@ final class CategoryListViewController: UIViewController {
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
         button.setTitle(NSLocalizedString("category_create_button", comment: "Add category button"), for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
         button.layer.cornerRadius = 16

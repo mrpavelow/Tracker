@@ -24,7 +24,7 @@ final class ScheduleSelectorViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         setupTitleLabel()
         setupTableView()
         setupDoneButton()
@@ -49,7 +49,7 @@ final class ScheduleSelectorViewController: UIViewController {
     
     private func setupTableView() {
         view.addSubview(tableView)
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = .systemBackground
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
@@ -66,7 +66,7 @@ final class ScheduleSelectorViewController: UIViewController {
     private func setupDoneButton() {
         let doneButton = UIButton(type: .system)
         doneButton.setTitle(NSLocalizedString("done", comment: "Done button"), for: .normal)
-        doneButton.setTitleColor(.white, for: .normal)
+        doneButton.setTitleColor(.ypWhite, for: .normal)
         doneButton.layer.cornerRadius = 16
         doneButton.backgroundColor = .ypBlack
         doneButton.translatesAutoresizingMaskIntoConstraints = false

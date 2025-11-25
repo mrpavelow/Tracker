@@ -108,7 +108,7 @@ final class NewTrackerViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("emoji_chooser_header", comment: "Emoji chooser header")
         label.font = .boldSystemFont(ofSize: 19)
-        label.textColor = .black
+        label.textColor = .ypBlack
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -117,7 +117,7 @@ final class NewTrackerViewController: UIViewController {
         let label = UILabel()
         label.text = NSLocalizedString("color_chooser_header", comment: "Color chooser header")
         label.font = .boldSystemFont(ofSize: 19)
-        label.textColor = .black
+        label.textColor = .ypBlack
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()

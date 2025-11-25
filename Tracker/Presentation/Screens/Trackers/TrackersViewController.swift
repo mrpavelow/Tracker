@@ -56,7 +56,7 @@ final class TrackersViewController: UIViewController {
     private let emptyLabel: UILabel = {
         let label = UILabel()
         label.text = NSLocalizedString("empty_label", comment: "Empty Label String")
-        label.textColor = .black
+        label.textColor = .ypBlack
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false

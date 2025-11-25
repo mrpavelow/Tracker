@@ -4,12 +4,12 @@ final class StatisticsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGray6
+        view.backgroundColor = .systemBackground
         
         let label = UILabel()
         label.text = NSLocalizedString("statistics_empty_label", comment: "Statistics empty label")
         label.textAlignment = .center
-        label.textColor = .secondaryLabel
+        label.textColor = .label
         label.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(label)

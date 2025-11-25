@@ -4,10 +4,15 @@ import SnapshotTesting
 
 final class TrackerTests: XCTestCase {
     
-    func testViewController() {
+    func testMainVCLightAppearence(record: Bool) {
+        let vc = TabBarViewController()
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .light)))
+    }
+    
+    func testMainVCDarkAppearence() {
         let vc = TabBarViewController()
         
-        assertSnapshot(of: vc, as: .image)
+        assertSnapshot(of: vc, as: .image(traits: .init(userInterfaceStyle: .dark)))
     }
 
     override func setUpWithError() throws {
