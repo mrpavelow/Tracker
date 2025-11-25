@@ -9,7 +9,7 @@ final class NewCategoryViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая категория"
+        label.text = (NSLocalizedString("new_category_screen_header", comment: "New category header"))
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -20,11 +20,11 @@ final class NewCategoryViewController: UIViewController {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let done = UIBarButtonItem(title: "Готово", style: .done, target: self, action: #selector(hideKeyboard))
+        let done = UIBarButtonItem(title: NSLocalizedString("done", comment: ""), style: .done, target: self, action: #selector(hideKeyboard))
         toolbar.items = [flex, done]
         let tf = UITextField()
         tf.inputAccessoryView = toolbar
-        tf.placeholder = "Введите название категории"
+        tf.placeholder = (NSLocalizedString("new_category_text_field", comment: "New category textfield"))
         tf.backgroundColor = UIColor(resource: .ypBackground)
         tf.layer.cornerRadius = 16
         tf.layer.masksToBounds = true
@@ -37,7 +37,7 @@ final class NewCategoryViewController: UIViewController {
     
     private let doneButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Готово", for: .normal)
+        button.setTitle(NSLocalizedString("done", comment: "Done button"), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.layer.cornerRadius = 16

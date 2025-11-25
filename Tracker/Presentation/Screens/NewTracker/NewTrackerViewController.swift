@@ -18,7 +18,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let warningLabel: UILabel = {
         let label = UILabel()
-        label.text = "Ограничение 38 символов"
+        label.text = NSLocalizedString("warning_label", comment: "Character limit label")
         label.textColor = .systemRed
         label.font = .systemFont(ofSize: 17, weight: .regular)
         label.isHidden = true
@@ -28,7 +28,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Новая привычка"
+        label.text = NSLocalizedString("new_habit", comment: "Trackers title header")
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -47,12 +47,12 @@ final class NewTrackerViewController: UIViewController {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let done = UIBarButtonItem(title: "Готово", style: .done, target: self, action: #selector(hideKeyboard))
+        let done = UIBarButtonItem(title: NSLocalizedString("done", comment: ""), style: .done, target: self, action: #selector(hideKeyboard))
         toolbar.items = [flex, done]
         let textField = UITextField()
         textField.inputAccessoryView = toolbar
         textField.clearButtonMode = .whileEditing
-        textField.placeholder = "Введите название трекера"
+        textField.placeholder = NSLocalizedString("type_tracker_name", comment: "Trackers title header")
         textField.backgroundColor = UIColor(resource: .ypBackground)
         textField.layer.cornerRadius = 16
         textField.layer.masksToBounds = true
@@ -64,7 +64,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let categoryButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Категория", for: .normal)
+        button.setTitle(NSLocalizedString("category", comment: "Category selector"), for: .normal)
         button.setTitleColor(.ypBlack, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
         button.contentHorizontalAlignment = .left
@@ -73,7 +73,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let scheduleButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Расписание", for: .normal)
+        button.setTitle(NSLocalizedString("schedule", comment: "Schedule selector"), for: .normal)
         button.setTitleColor(.ypBlack, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .regular)
         button.contentHorizontalAlignment = .left
@@ -82,7 +82,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Отменить", for: .normal)
+        button.setTitle(NSLocalizedString("cancel_create_button", comment: "Cancel button"), for: .normal)
         button.setTitleColor(.ypRed, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.layer.cornerRadius = 16
@@ -95,7 +95,7 @@ final class NewTrackerViewController: UIViewController {
     
     private let createButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Создать", for: .normal)
+        button.setTitle(NSLocalizedString("create_button", comment: "Create button"), for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 17, weight: .medium)
         button.layer.cornerRadius = 16
@@ -106,7 +106,7 @@ final class NewTrackerViewController: UIViewController {
     
     private lazy var emojiLabel: UILabel = {
         let label = UILabel()
-        label.text = "Emoji"
+        label.text = NSLocalizedString("emoji_chooser_header", comment: "Emoji chooser header")
         label.font = .boldSystemFont(ofSize: 19)
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -115,7 +115,7 @@ final class NewTrackerViewController: UIViewController {
     
     private lazy var colorLabel: UILabel = {
         let label = UILabel()
-        label.text = "Цвет"
+        label.text = NSLocalizedString("color_chooser_header", comment: "Color chooser header")
         label.font = .boldSystemFont(ofSize: 19)
         label.textColor = .black
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -168,15 +168,20 @@ final class NewTrackerViewController: UIViewController {
     private var tableTopConstraint: NSLayoutConstraint!
     private var selectedCategory: String?
     private var selectedDays: [String] = []
-    private let allDays = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"]
-    private let dayShort: [String: String] = [
-        "Понедельник": "Пн",
-        "Вторник": "Вт",
-        "Среда": "Ср",
-        "Четверг": "Чт",
-        "Пятница": "Пт",
-        "Суббота": "Сб",
-        "Воскресенье": "Вс"
+    
+    private let dayKeys = [
+        "monday", "tuesday", "wednesday",
+        "thursday", "friday", "saturday", "sunday"
+    ]
+    
+    private let dayShortByKey: [String: String] = [
+        "monday": NSLocalizedString("monday_short", comment: ""),
+        "tuesday": NSLocalizedString("tuesday_short", comment: ""),
+        "wednesday": NSLocalizedString("wednesday_short", comment: ""),
+        "thursday": NSLocalizedString("thursday_short", comment: ""),
+        "friday": NSLocalizedString("friday_short", comment: ""),
+        "saturday": NSLocalizedString("saturday_short", comment: ""),
+        "sunday": NSLocalizedString("sunday_short", comment: "")
     ]
     
     private let emojiArray: [String] = [
@@ -248,16 +253,18 @@ final class NewTrackerViewController: UIViewController {
             return
         }
         
+        _ = dayKeys.map { NSLocalizedString($0, comment: "") }
+                
         let scheduleInts: [Int] = selectedDays.compactMap {
             switch $0 {
-            case "Понедельник": return 1
-            case "Вторник":     return 2
-            case "Среда":       return 3
-            case "Четверг":     return 4
-            case "Пятница":     return 5
-            case "Суббота":     return 6
-            case "Воскресенье": return 7
-            default:            return nil
+            case "monday":    return 2
+            case "tuesday":   return 3
+            case "wednesday": return 4
+            case "thursday":  return 5
+            case "friday":    return 6
+            case "saturday":  return 7
+            case "sunday":    return 1
+            default:          return nil
             }
         }
         
@@ -383,7 +390,7 @@ final class NewTrackerViewController: UIViewController {
             self.updateCreateButtonState()
             
             guard !category.title.isEmpty else {
-                self.categoryButton.setTitle("Категория", for: .normal)
+                self.categoryButton.setTitle(NSLocalizedString("category", comment: "Categroy button"), for: .normal)
                 self.categoryButton.setAttributedTitle(nil, for: .normal)
                 return
             }
@@ -399,7 +406,7 @@ final class NewTrackerViewController: UIViewController {
             paragraph.alignment = .left
             
             let result = NSMutableAttributedString(
-                string: "Категория\n",
+                string: NSLocalizedString("category_next", comment: ""),
                 attributes: [
                     .font: titleFont,
                     .foregroundColor: titleColor,
@@ -430,7 +437,10 @@ final class NewTrackerViewController: UIViewController {
     }
     
     @objc private func scheduleTapped() {
-        let vc = ScheduleSelectorViewController(days: allDays, selected: selectedDays)
+        let vc = ScheduleSelectorViewController(
+            days: dayKeys,
+            selected: selectedDays
+        )
         
         vc.onSelectionChanged = { [weak self] newSelected in
             guard let self else { return }
@@ -438,22 +448,22 @@ final class NewTrackerViewController: UIViewController {
             self.selectedDays = newSelected
             self.updateCreateButtonState()
             
-            let dayShort: [String: String] = [
-                "Понедельник": "Пн",
-                "Вторник": "Вт",
-                "Среда": "Ср",
-                "Четверг": "Чт",
-                "Пятница": "Пт",
-                "Суббота": "Сб",
-                "Воскресенье": "Вс"
+            let dayShortByKey: [String: String] = [
+                "monday": NSLocalizedString("monday_short", comment: ""),
+                "tuesday": NSLocalizedString("tuesday_short", comment: ""),
+                "wednesday": NSLocalizedString("wednesday_short", comment: ""),
+                "thursday": NSLocalizedString("thursday_short", comment: ""),
+                "friday": NSLocalizedString("friday_short", comment: ""),
+                "saturday": NSLocalizedString("saturday_short", comment: ""),
+                "sunday": NSLocalizedString("sunday_short", comment: ""),
             ]
             
-            let short = newSelected.compactMap { dayShort[$0] }
+            let short = selectedDays.compactMap { dayShortByKey[$0] }
             let formatted = short.joined(separator: ", ")
             
             if formatted.isEmpty {
                 self.scheduleButton.setAttributedTitle(nil, for: .normal)
-                self.scheduleButton.setTitle("Расписание", for: .normal)
+                self.scheduleButton.setTitle(NSLocalizedString("schedule", comment: "Schedule button"), for: .normal)
                 return
             }
             
@@ -468,7 +478,7 @@ final class NewTrackerViewController: UIViewController {
             paragraph.alignment = .left
             
             let result = NSMutableAttributedString(
-                string: "Расписание\n",
+                string: NSLocalizedString("schedule_next", comment: ""),
                 attributes: [
                     .font: titleFont,
                     .foregroundColor: titleColor,
@@ -509,16 +519,18 @@ final class NewTrackerViewController: UIViewController {
             return
         }
         
-        let scheduleInts: [Int] = selectedDays.compactMap { day in
-            switch day {
-            case "Понедельник": return 2
-            case "Вторник":     return 3
-            case "Среда":       return 4
-            case "Четверг":     return 5
-            case "Пятница":     return 6
-            case "Суббота":     return 7
-            case "Воскресенье": return 1
-            default:            return nil
+        _ = dayKeys.map { NSLocalizedString($0, comment: "") }
+                
+        let scheduleInts: [Int] = selectedDays.compactMap {
+            switch $0 {
+            case "monday":    return 2
+            case "tuesday":   return 3
+            case "wednesday": return 4
+            case "thursday":  return 5
+            case "friday":    return 6
+            case "saturday":  return 7
+            case "sunday":    return 1
+            default:          return nil
             }
         }
         

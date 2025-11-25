@@ -71,7 +71,7 @@ final class TrackerCell: UICollectionViewCell {
         emojiLabel.text = tracker.emoji
         titleLabel.text = tracker.name
         cardView.backgroundColor = tracker.color
-        countLabel.text = "\(completedCount) дней"
+        countLabel.text = String(format: NSLocalizedString("days_completed", comment: ""), completedCount)
         
         let imageResource: ImageResource = completedToday ? .checkMark : .plusButton
         let image = UIImage(resource: imageResource)

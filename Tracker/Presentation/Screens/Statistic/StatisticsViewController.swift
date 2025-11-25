@@ -7,7 +7,7 @@ final class StatisticsViewController: UIViewController {
         view.backgroundColor = .systemGray6
         
         let label = UILabel()
-        label.text = "Статистика пока пуста"
+        label.text = NSLocalizedString("statistics_empty_label", comment: "Statistics empty label")
         label.textAlignment = .center
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false

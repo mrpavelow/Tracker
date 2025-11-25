@@ -23,7 +23,7 @@ final class TrackersViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Трекеры"
+        label.text = NSLocalizedString("trackers", comment: "Trackers title header")
         label.font = .systemFont(ofSize: 34, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -34,14 +34,14 @@ final class TrackersViewController: UIViewController {
         let toolbar = UIToolbar()
         toolbar.sizeToFit()
         let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        let done = UIBarButtonItem(title: "Готово", style: .done, target: self, action: #selector(hideKeyboard))
+        let done = UIBarButtonItem(title: NSLocalizedString("done", comment: ""), style: .done, target: self, action: #selector(hideKeyboard))
         toolbar.items = [flex, done]
         searchBar.inputAccessoryView = toolbar
         searchBar.backgroundImage = UIImage()
         searchBar.searchTextField.backgroundColor = .systemGray6
         searchBar.searchTextField.layer.cornerRadius = 10
         searchBar.searchTextField.clipsToBounds = true
-        searchBar.placeholder = "Поиск"
+        searchBar.placeholder = NSLocalizedString("search", comment: "Trackers title header")
         searchBar.translatesAutoresizingMaskIntoConstraints = false
         return searchBar
     }()
@@ -55,7 +55,7 @@ final class TrackersViewController: UIViewController {
     
     private let emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Что будем отслеживать?"
+        label.text = NSLocalizedString("empty_label", comment: "Empty Label String")
         label.textColor = .black
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textAlignment = .center
