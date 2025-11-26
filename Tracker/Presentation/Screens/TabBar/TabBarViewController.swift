@@ -10,6 +10,10 @@ final class TabBarViewController: UITabBarController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsService.track(
+                    event: .open,
+                    screen: .main
+                )
 
         let seen = UserDefaultsService.shared.hasSeenOnboarding
         guard !seen else { return }
@@ -18,6 +22,14 @@ final class TabBarViewController: UITabBarController {
         onboarding.modalPresentationStyle = .fullScreen
         present(onboarding, animated: true)
     }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+            super.viewDidDisappear(animated)
+            AnalyticsService.track(
+                event: .close,
+                screen: .main
+            )
+        }
     
     private func setupTabs() {
         let trackersVC = TrackersViewController()

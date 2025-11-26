@@ -2,8 +2,10 @@
 "trackers" = "Трекеры";
 "search" = "Поиск";
 "empty_label" = "Что будем отслеживать?";
+"nothing_found" = "Ничего не найдено";
 "trackers_tb_label" = "Трекеры";
 "statistics_tb_label" = "Статистика";
+"filters" = "Фильтры";
 
 //MARK: New Tracker Screen
 "new_habit" = "Новая привычка";
@@ -50,6 +52,12 @@
 "onboarding_title_one" = "Отслеживайте только \nто, что хотите";
 "onboarding_title_two" = "Даже если это \nне литры воды и йога";
 "onboarding_button" = "Вот это технологии!";
+
+//MARK: Filters Screen
+"filters_all" = "Все трекеры";
+"filters_today" = "Трекеры на сегодня";
+"filters_completed" = "Завершенные";
+"filters_uncompleted" = "Не завершенные";
 
 //MARK: Multiple Use Strings
 "done" = "Готово";

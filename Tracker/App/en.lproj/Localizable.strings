@@ -2,8 +2,10 @@
 "trackers" = Trackers;
 "search" = Search;
 "empty_label" = "What we will track?";
+"nothing_found" = "Nothing found";
 "trackers_tb_label" = Trackers;
 "statistics_tb_label" = Statistics;
+"filters" = "Filters";
 
 //MARK: New Tracker Screen
 "new_habit" = "New habit";
@@ -50,6 +52,12 @@
 "onboarding_title_one" = "Track only what \nyou want";
 "onboarding_title_two" = "Even if it's not \nliters of water and yoga";
 "onboarding_button" = "Such a technology!";
+
+//MARK: Filters Screen
+"filters_all" = "All trackers";
+"filters_today" = "Trackers for today";
+"filters_completed" = "Completed";
+"filters_uncompleted" = "Uncompleted";
 
 //MARK: Multiple Use Strings
 "done" = Done;

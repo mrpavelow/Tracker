@@ -81,6 +81,11 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     @objc private func didTapPlus() {
+        AnalyticsService.track(
+                    event: .click,
+                    screen: .main,
+                    item: .track
+                )
         delegate?.didTapPlusButton(in: self)
     }
     
