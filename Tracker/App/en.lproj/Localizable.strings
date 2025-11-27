@@ -60,6 +60,11 @@
 
 //MARK: Statistics Screen
 "statistics_empty_label" = "There is nothing to analyze yet";
+"statistics_title" = "Statistics";
+"stats_best_period" = "Best period";
+"stats_ideal_days" = "Perfect days";
+"stats_completed_trackers" = "Trackers completed";
+"stats_average_value" = "Average value";
 
 //MARK: Onboarding Screen
 "onboarding_title_one" = "Track only what \nyou want";

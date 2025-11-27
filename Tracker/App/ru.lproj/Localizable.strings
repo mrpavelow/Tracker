@@ -60,6 +60,11 @@
 
 //MARK: Statistics Screen
 "statistics_empty_label" = "Анализировать пока нечего";
+"statistics_title" = "Статистика";
+"stats_best_period" = "Лучший период";
+"stats_ideal_days" = "Идеальные дни";
+"stats_completed_trackers" = "Трекеров завершено";
+"stats_average_value" = "Среднее значение";
 
 //MARK: Onboarding Screen
 "onboarding_title_one" = "Отслеживайте только \nто, что хотите";
