@@ -7,6 +7,15 @@
 "statistics_tb_label" = "Статистика";
 "filters" = "Фильтры";
 
+//MARK: Context Menu
+"context_edit" = "Редактировать";
+"context_delete" = "Удалить";
+"delete_tracker_message" = "Уверены что хотите удалить трекер?";
+
+//MARK: Edit Habit Screen
+"save_button" = "Сохранить";
+"edit_habit" = "Редактирование привычки";
+
 //MARK: New Tracker Screen
 "new_habit" = "Новая привычка";
 "type_tracker_name" = "Введите название трекера";
@@ -19,6 +28,10 @@
 "create_button" = "Создать";
 "cancel_create_button" = "Отменить";
 "warning_label" = "Ограничение 38 символов";
+
+//MARK: Category Edit Screen
+"edit_category_title" = "Редактирование категории";
+"delete_category_message" = "Уверены что хотите удалить категорию?";
 
 //MARK: Schedule Screen
 "monday" = "Понедельник";
@@ -61,3 +74,5 @@
 
 //MARK: Multiple Use Strings
 "done" = "Готово";
+"delete" = "Удалить";
+"cancel" = "Отменить";

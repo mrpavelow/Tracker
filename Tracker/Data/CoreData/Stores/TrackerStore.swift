@@ -142,6 +142,44 @@ final class TrackerStore: NSObject {
         saveContext()
     }
 
+    func updateTracker(
+        id: UUID,
+        name: String,
+        emoji: String,
+        colorHex: String,
+        categoryTitle: String,
+        schedule: [Int]
+    ) {
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        do {
+            guard let core = try context.fetch(request).first else {
+                print("updateTracker: tracker with id \(id) not found")
+                return
+            }
+
+            core.name = name
+            core.emoji = emoji
+            core.colorHex = colorHex
+
+            core.schedule = schedule.map { NSNumber(value: $0) } as NSArray
+
+            let mask = schedule.reduce(0) { partial, rawValue in
+                let bit = 1 << (rawValue - 1)
+                return partial | bit
+            }
+            core.scheduleMask = Int16(mask)
+
+            let category = getOrCreateCategory(with: categoryTitle)
+            core.category = category
+
+            saveContext()
+        } catch {
+            print("updateTracker error:", error)
+        }
+    }
+
     func updateName(at indexPath: IndexPath, newName: String) {
         let core = frc.object(at: indexPath)
         core.name = newName

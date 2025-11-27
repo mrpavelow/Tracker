@@ -80,6 +80,51 @@ final class TrackersViewController: UIViewController {
     }()
     
     // MARK: - Методы для логики выполнения
+
+    private func editTracker(at indexPath: IndexPath) {
+        let tracker = trackerStore.tracker(at: indexPath)
+        let categoryTitle = trackerStore.titleForSection(indexPath.section)
+        let completedCount = completedRecords.filter { $0.trackerId == tracker.id }.count
+
+        let vc = EditTrackerViewController(
+            tracker: tracker,
+            categoryTitle: categoryTitle,
+            completedDays: completedCount,
+            trackerStore: trackerStore
+        )
+
+        vc.onSave = { [weak self] _, _, _, _, _ in
+            self?.view.endEditing(true)
+        }
+
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
+    }
+
+    private func confirmDeleteTracker(at indexPath: IndexPath) {
+        let alert = UIAlertController(
+            title: "",
+            message: NSLocalizedString("delete_tracker_message", comment: "Are you sure you want to delete tracker?"),
+            preferredStyle: .actionSheet
+        )
+
+        let delete = UIAlertAction(
+            title: NSLocalizedString("delete", comment: "Delete"),
+            style: .destructive
+        ) { [weak self] _ in
+            self?.trackerStore.delete(at: indexPath)
+        }
+
+        let cancel = UIAlertAction(
+            title: NSLocalizedString("cancel", comment: "Cancel"),
+            style: .cancel
+        )
+
+        alert.addAction(delete)
+        alert.addAction(cancel)
+
+        present(alert, animated: true)
+    }
     
     private func updateFilterButtonAppearance() {
         let isActive = currentFilter != .none
@@ -483,7 +528,39 @@ extension TrackersViewController: UICollectionViewDataSource {
     }
 }
 
-extension TrackersViewController: UICollectionViewDelegate {}
+extension TrackersViewController: UICollectionViewDelegate {
+
+    func collectionView(_ collectionView: UICollectionView,
+                        contextMenuConfigurationForItemAt indexPath: IndexPath,
+                        point: CGPoint) -> UIContextMenuConfiguration? {
+
+        _ = trackerStore.tracker(at: indexPath)
+
+        return UIContextMenuConfiguration(
+            identifier: indexPath as NSCopying,
+            previewProvider: nil
+        ) { [weak self] _ in
+            guard let self else {
+                return UIMenu(children: [])
+            }
+            
+            let editAction = UIAction(
+                title: NSLocalizedString("context_edit", comment: "Edit tracker")
+            ) { _ in
+                self.editTracker(at: indexPath)
+            }
+
+            let deleteAction = UIAction(
+                title: NSLocalizedString("context_delete", comment: "Delete tracker"),
+                attributes: .destructive
+            ) { _ in
+                self.confirmDeleteTracker(at: indexPath)
+            }
+            
+            return UIMenu(children: [editAction, deleteAction])
+        }
+    }
+}
 
 extension TrackersViewController: TrackerCellDelegate {
     func didTapPlusButton(in cell: TrackerCell) {

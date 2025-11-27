@@ -7,6 +7,15 @@
 "statistics_tb_label" = Statistics;
 "filters" = "Filters";
 
+//MARK: Context Menu
+"context_edit" = "Edit";
+"context_delete" = "Delete";
+"delete_tracker_message" = "Are you sure you want to delete tracker?";
+
+//MARK: Edit Habit Screen
+"save_button" = "Save";
+"edit_habit" = "Edit habit";
+
 //MARK: New Tracker Screen
 "new_habit" = "New habit";
 "type_tracker_name" = "Enter tracker name";
@@ -19,6 +28,10 @@
 "create_button" = Create;
 "cancel_create_button" = Cancel;
 "warning_label" = "38 character limit";
+
+//MARK: Category Edit Screen
+"edit_category_title" = "Edit category";
+"delete_category_message" = "Are you sure you want to delete category?";
 
 //MARK: Schedule Screen
 "monday" = Monday;
@@ -61,3 +74,5 @@
 
 //MARK: Multiple Use Strings
 "done" = Done;
+"delete" = Delete;
+"cancel" = Cancel;
