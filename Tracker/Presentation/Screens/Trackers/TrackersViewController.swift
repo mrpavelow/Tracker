@@ -547,6 +547,11 @@ extension TrackersViewController: UICollectionViewDelegate {
             let editAction = UIAction(
                 title: NSLocalizedString("context_edit", comment: "Edit tracker")
             ) { _ in
+                AnalyticsService.track(
+                        event: .click,
+                        screen: .main,
+                        item: .edit
+                    )
                 self.editTracker(at: indexPath)
             }
 
@@ -554,6 +559,11 @@ extension TrackersViewController: UICollectionViewDelegate {
                 title: NSLocalizedString("context_delete", comment: "Delete tracker"),
                 attributes: .destructive
             ) { _ in
+                AnalyticsService.track(
+                        event: .click,
+                        screen: .main,
+                        item: .delete
+                    )
                 self.confirmDeleteTracker(at: indexPath)
             }
             
