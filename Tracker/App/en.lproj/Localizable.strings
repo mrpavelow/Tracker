@@ -1,0 +1,83 @@
+//MARK: Main Screen
+"trackers" = Trackers;
+"search" = Search;
+"empty_label" = "What we will track?";
+"nothing_found" = "Nothing found";
+"trackers_tb_label" = Trackers;
+"statistics_tb_label" = Statistics;
+"filters" = "Filters";
+
+//MARK: Context Menu
+"context_edit" = "Edit";
+"context_delete" = "Delete";
+"delete_tracker_message" = "Are you sure you want to delete tracker?";
+
+//MARK: Edit Habit Screen
+"save_button" = "Save";
+"edit_habit" = "Edit habit";
+
+//MARK: New Tracker Screen
+"new_habit" = "New habit";
+"type_tracker_name" = "Enter tracker name";
+"category" = Category;
+"category_next" = "Category\n";
+"schedule" = Schedule;
+"schedule_next" = "Schedule\n";
+"emoji_chooser_header" = Emoji;
+"color_chooser_header" = Color;
+"create_button" = Create;
+"cancel_create_button" = Cancel;
+"warning_label" = "38 character limit";
+
+//MARK: Category Edit Screen
+"edit_category_title" = "Edit category";
+"delete_category_message" = "Are you sure you want to delete category?";
+
+//MARK: Schedule Screen
+"monday" = Monday;
+"tuesday" = Tuesday;
+"wednesday" = Wednesday;
+"thursday" = Thursday;
+"friday" = Friday;
+"saturday" = Saturday;
+"sunday" = Sunday;
+"monday_short" = "Mon";
+"tuesday_short" = "Tue";
+"wednesday_short" = "Wed";
+"thursday_short" = "Thu";
+"friday_short" = "Fri";
+"saturday_short" = "Sat";
+"sunday_short" = "Sun";
+
+//MARK: Category Screen
+"category_screen_header" = Category;
+"category_empty_label" = "Habits and events can \nbe combined by meaning";
+"category_create_button" = "Add category";
+
+//MARK: New Category Screen
+"new_category_screen_header" = "New category";
+"new_category_text_field" = "Enter category name";
+
+//MARK: Statistics Screen
+"statistics_empty_label" = "There is nothing to analyze yet";
+"statistics_title" = "Statistics";
+"stats_best_period" = "Best period";
+"stats_ideal_days" = "Perfect days";
+"stats_completed_trackers" = "Trackers completed";
+"stats_average_value" = "Average value";
+
+//MARK: Onboarding Screen
+"onboarding_title_one" = "Track only what \nyou want";
+"onboarding_title_two" = "Even if it's not \nliters of water and yoga";
+"onboarding_button" = "Such a technology!";
+
+//MARK: Filters Screen
+"filters_all" = "All trackers";
+"filters_today" = "Trackers for today";
+"filters_completed" = "Completed";
+"filters_uncompleted" = "Uncompleted";
+
+//MARK: Multiple Use Strings
+"done" = Done;
+"delete" = Delete;
+"cancel" = Cancel;
