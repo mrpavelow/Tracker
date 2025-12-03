@@ -24,7 +24,7 @@ final class ScheduleSelectorViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .white
+        view.backgroundColor = .systemBackground
         setupTitleLabel()
         setupTableView()
         setupDoneButton()
@@ -33,7 +33,7 @@ final class ScheduleSelectorViewController: UIViewController {
     // MARK: - UI Setup
     
     private func setupTitleLabel() {
-        titleLabel.text = "Расписание"
+        titleLabel.text = (NSLocalizedString("schedule", comment: "Schedule selector"))
         titleLabel.font = .systemFont(ofSize: 16, weight: .medium)
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 0
@@ -49,7 +49,7 @@ final class ScheduleSelectorViewController: UIViewController {
     
     private func setupTableView() {
         view.addSubview(tableView)
-        tableView.backgroundColor = .white
+        tableView.backgroundColor = .systemBackground
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
@@ -65,8 +65,8 @@ final class ScheduleSelectorViewController: UIViewController {
     
     private func setupDoneButton() {
         let doneButton = UIButton(type: .system)
-        doneButton.setTitle("Готово", for: .normal)
-        doneButton.setTitleColor(.white, for: .normal)
+        doneButton.setTitle(NSLocalizedString("done", comment: "Done button"), for: .normal)
+        doneButton.setTitleColor(.ypWhite, for: .normal)
         doneButton.layer.cornerRadius = 16
         doneButton.backgroundColor = .ypBlack
         doneButton.translatesAutoresizingMaskIntoConstraints = false
@@ -166,8 +166,8 @@ private final class DayCell: UITableViewCell {
         toggleSwitch.addTarget(self, action: #selector(switchValueChanged(_:)), for: .valueChanged)
     }
     
-    func configure(with day: String, isOn: Bool) {
-        titleLabel.text = day
+    func configure(with dayKey: String, isOn: Bool) {
+        titleLabel.text = NSLocalizedString(dayKey, comment: "")
         toggleSwitch.isOn = isOn
     }
     

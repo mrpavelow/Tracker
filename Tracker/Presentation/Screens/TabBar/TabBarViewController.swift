@@ -1,6 +1,6 @@
 import UIKit
 
-final class MainTabBarController: UITabBarController {
+final class TabBarViewController: UITabBarController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -10,6 +10,10 @@ final class MainTabBarController: UITabBarController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        AnalyticsService.track(
+                    event: .open,
+                    screen: .main
+                )
 
         let seen = UserDefaultsService.shared.hasSeenOnboarding
         guard !seen else { return }
@@ -19,11 +23,19 @@ final class MainTabBarController: UITabBarController {
         present(onboarding, animated: true)
     }
     
+    override func viewDidDisappear(_ animated: Bool) {
+            super.viewDidDisappear(animated)
+            AnalyticsService.track(
+                event: .close,
+                screen: .main
+            )
+        }
+    
     private func setupTabs() {
         let trackersVC = TrackersViewController()
         let trackersNav = UINavigationController(rootViewController: trackersVC)
         trackersNav.tabBarItem = UITabBarItem(
-            title: "Трекеры",
+            title: NSLocalizedString("trackers_tb_label", comment: "Trackers label in Tabbar"),
             image: UIImage(named: "trackers"),
             tag: 0
         )
@@ -31,7 +43,7 @@ final class MainTabBarController: UITabBarController {
         let statsVC = StatisticsViewController()
         let statsNav = UINavigationController(rootViewController: statsVC)
         statsNav.tabBarItem = UITabBarItem(
-            title: "Статистика",
+            title: NSLocalizedString("statistics_tb_label", comment: "Statistics label in Tabbar"),
             image: UIImage(named: "stats"),
             tag: 1
         )

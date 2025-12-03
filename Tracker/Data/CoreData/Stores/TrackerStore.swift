@@ -17,6 +17,9 @@ final class TrackerStore: NSObject {
 
     weak var delegate: TrackerStoreDelegate?
 
+    private var currentWeekday: Weekday?
+    private var searchText: String?
+
     private let context: NSManagedObjectContext
     private let saveContext: () -> Void
     private var frc: NSFetchedResultsController<TrackerCoreData>
@@ -58,6 +61,12 @@ final class TrackerStore: NSObject {
     }
 
     // MARK: - Публичный API для UI
+    
+    func setSearchText(_ text: String?) {
+        let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        searchText = trimmed.isEmpty ? nil : trimmed
+        applyFiltersAndRefetch()
+    }
 
     func setWeekdayFilter(_ weekday: Weekday?) {
         if let weekday {
@@ -75,7 +84,8 @@ final class TrackerStore: NSObject {
         } catch {
             print("FRC performFetch error:", error)
         }
-
+        currentWeekday = weekday
+        applyFiltersAndRefetch()
         delegate?.trackerStoreDidReloadData(self)
     }
 
@@ -132,6 +142,44 @@ final class TrackerStore: NSObject {
         saveContext()
     }
 
+    func updateTracker(
+        id: UUID,
+        name: String,
+        emoji: String,
+        colorHex: String,
+        categoryTitle: String,
+        schedule: [Int]
+    ) {
+        let request: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        do {
+            guard let core = try context.fetch(request).first else {
+                print("updateTracker: tracker with id \(id) not found")
+                return
+            }
+
+            core.name = name
+            core.emoji = emoji
+            core.colorHex = colorHex
+
+            core.schedule = schedule.map { NSNumber(value: $0) } as NSArray
+
+            let mask = schedule.reduce(0) { partial, rawValue in
+                let bit = 1 << (rawValue - 1)
+                return partial | bit
+            }
+            core.scheduleMask = Int16(mask)
+
+            let category = getOrCreateCategory(with: categoryTitle)
+            core.category = category
+
+            saveContext()
+        } catch {
+            print("updateTracker error:", error)
+        }
+    }
+
     func updateName(at indexPath: IndexPath, newName: String) {
         let core = frc.object(at: indexPath)
         core.name = newName
@@ -139,6 +187,39 @@ final class TrackerStore: NSObject {
     }
 
     // MARK: - Приватные утилиты
+    
+    private func applyFiltersAndRefetch() {
+        var predicates: [NSPredicate] = []
+
+        if let weekday = currentWeekday {
+            let bit = 1 << (weekday.rawValue - 1)
+            predicates.append(
+                NSPredicate(format: "scheduleMask & %d != 0", bit)
+            )
+        }
+
+        if let text = searchText, !text.isEmpty {
+            predicates.append(
+                NSPredicate(format: "name CONTAINS[cd] %@", text)
+            )
+        }
+
+        if predicates.isEmpty {
+            frc.fetchRequest.predicate = nil
+        } else {
+            frc.fetchRequest.predicate = NSCompoundPredicate(
+                andPredicateWithSubpredicates: predicates
+            )
+        }
+
+        do {
+            try frc.performFetch()
+        } catch {
+            print("FRC performFetch error:", error)
+        }
+
+        delegate?.trackerStoreDidReloadData(self)
+    }
 
     private func getOrCreateCategory(with title: String) -> TrackerCategoryCoreData {
         let request: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()

@@ -12,7 +12,7 @@ final class CategoryListViewController: UIViewController {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Категория"
+        label.text = NSLocalizedString("category", comment: "Category screen header")
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -38,7 +38,7 @@ final class CategoryListViewController: UIViewController {
     
     private let emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Привычки и события можно \nобъединить по смыслу"
+        label.text = NSLocalizedString("category_empty_label", comment: "Category empty label")
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textAlignment = .center
         label.textColor = .label
@@ -50,8 +50,8 @@ final class CategoryListViewController: UIViewController {
     
     private let addButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setTitle("Добавить категорию", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+        button.setTitle(NSLocalizedString("category_create_button", comment: "Add category button"), for: .normal)
+        button.setTitleColor(.ypWhite, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         button.backgroundColor = .ypBlack
         button.layer.cornerRadius = 16
@@ -164,6 +164,72 @@ final class CategoryListViewController: UIViewController {
 // MARK: - UITableViewDataSource
 
 extension CategoryListViewController: UITableViewDataSource {
+    
+    func tableView(_ tableView: UITableView,
+                       contextMenuConfigurationForRowAt indexPath: IndexPath,
+                       point: CGPoint) -> UIContextMenuConfiguration? {
+
+            return UIContextMenuConfiguration(
+                identifier: indexPath as NSIndexPath,
+                previewProvider: nil
+            ) { [weak self] _ in
+                guard let self else { return nil }
+
+                let edit = UIAction(
+                    title: NSLocalizedString("context_edit", comment: "Edit category")
+                ) { _ in
+                    self.showEditCategory(at: indexPath)
+                }
+
+                let delete = UIAction(
+                    title: NSLocalizedString("context_delete", comment: "Delete category"),
+                    attributes: .destructive
+                ) { _ in
+                    self.confirmDeleteCategory(at: indexPath)
+                }
+
+                return UIMenu(children: [edit, delete])
+            }
+        }
+
+        // MARK: - Helpers
+
+        private func showEditCategory(at indexPath: IndexPath) {
+            let item = viewModel.categories[indexPath.row]
+
+            let vc = EditCategoryViewController(initialName: item.title)
+            vc.onSave = { [weak self] newTitle in
+                self?.viewModel.renameCategory(at: indexPath.row, to: newTitle)
+            }
+
+            let nav = UINavigationController(rootViewController: vc)
+            present(nav, animated: true)
+        }
+
+        private func confirmDeleteCategory(at indexPath: IndexPath) {
+            let alert = UIAlertController(
+                title: "",
+                message: NSLocalizedString("delete_category_message", comment: "Are you sure you want to delete category?"),
+                preferredStyle: .actionSheet
+            )
+
+            let deleteAction = UIAlertAction(
+                title: NSLocalizedString("delete", comment: "Delete"),
+                style: .destructive
+            ) { [weak self] _ in
+                self?.viewModel.deleteCategory(at: indexPath.row)
+            }
+
+            let cancelAction = UIAlertAction(
+                title: NSLocalizedString("cancel", comment: "Cancel"),
+                style: .cancel
+            )
+
+            alert.addAction(deleteAction)
+            alert.addAction(cancelAction)
+
+            present(alert, animated: true)
+        }
     
     func tableView(_ tableView: UITableView,
                    numberOfRowsInSection section: Int) -> Int {

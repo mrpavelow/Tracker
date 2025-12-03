@@ -50,6 +50,22 @@ final class CategoryListViewModel {
     }
     
     // MARK: - Selection
+
+    func renameCategory(at index: Int, to newTitle: String) {
+        guard index >= 0 && index < categories.count else { return }
+        let category = categories[index]
+
+        store.renameCategory(oldTitle: category.title, newTitle: newTitle)
+        reload()
+    }
+
+    func deleteCategory(at index: Int) {
+        guard index >= 0 && index < categories.count else { return }
+        let category = categories[index]
+
+        store.deleteCategory(withTitle: category.title)
+        reload()
+    }
     
     func isSelected(at indexPath: IndexPath) -> Bool {
         categories[indexPath.row].title == selectedCategoryTitle

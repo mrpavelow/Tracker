@@ -1,4 +1,5 @@
 import UIKit
+import AppMetricaCore
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -7,13 +8,35 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene,
                willConnectTo session: UISceneSession,
                options connectionOptions: UIScene.ConnectionOptions) {
+        
+        if let userActivity = connectionOptions.userActivities.first {
+            if userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+               let url = userActivity.webpageURL {
+                AppMetrica.trackOpeningURL(url)
+            }
+        }
+        
+        if let context = connectionOptions.urlContexts.first {
+            AppMetrica.trackOpeningURL(context.url)
+        }
 
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = MainTabBarController()
+        window.rootViewController = TabBarViewController()
         window.makeKeyAndVisible()
         self.window = window
+    }
+    
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        guard userActivity.activityType == NSUserActivityTypeBrowsingWeb,
+              let url = userActivity.webpageURL else { return }
+        AppMetrica.trackOpeningURL(url)
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let context = URLContexts.first else { return }
+        AppMetrica.trackOpeningURL(context.url)
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
